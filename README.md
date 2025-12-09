@@ -6,7 +6,7 @@ NAMA ANGGOTA KELOMPOK :
 
 ---
 
-Pelayanan Antrian Puskesmas Online
+Pelayanan Sistem Antrian Online Puskesmas Kaligandu
 
 ---
 
@@ -45,6 +45,8 @@ Pelayanan Antrian Puskesmas Online
 - Login, register, dan validasi menggunakan Auth Laravel.
 - Middleware untuk membatasi akses halaman berdasarkan role.
 
+---
+
 🛠️ Teknologi yang Digunakan
 - Laravel (PHP Framework)
 - Blade Template Engine
@@ -53,12 +55,16 @@ Pelayanan Antrian Puskesmas Online
 - Livewire
 - PHP 8+
 
+---
+
 📦 Kegunaan Aplikasi
 Aplikasi ini cocok digunakan untuk:
 - Puskesmas
 - Klinik kecil
 - Sistem antrian loket serbaguna
 - Pembelajaran sistem informasi manajemen antrian
+
+---
 
 Dengan sistem ini, proses antrian menjadi lebih:
 - Cepat
