@@ -4,27 +4,36 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Role; // pastikan model Role ada
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!Auth::check()) {
-            return redirect('/login');
+        $user = $request->user();
+        if (!$user) {
+            return redirect()->route('login');
         }
 
-        $user = Auth::user();
+        // ambil role dari relasi (roles.role) atau kolom role lama
+        $roleRaw = $user?->role?->role ?? $user?->role ?? '';
+        $userRole = strtolower(str_replace(' ', '_', trim((string) $roleRaw)));
 
-        // cari role id berdasarkan nama role di tabel roles
-        $roleData = Role::where('role', $role)->first();
+        foreach ($roles as $allowed) {
+            $allowed = strtolower(str_replace(' ', '_', trim((string) $allowed)));
 
-        // kalau role tidak ditemukan atau user bukan role itu
-        if (!$roleData || $user->role_id != $roleData->id) {
-            abort(403, 'Unauthorized');
+            // support wildcard: dokter_*
+            if (str_contains($allowed, '*')) {
+                $prefix = rtrim($allowed, '*');
+                if ($prefix !== '' && str_starts_with($userRole, $prefix)) {
+                    return $next($request);
+                }
+            } else {
+                if ($userRole === $allowed) {
+                    return $next($request);
+                }
+            }
         }
 
-        return $next($request);
+        return redirect()->route('home');
     }
 }

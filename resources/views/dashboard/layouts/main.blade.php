@@ -43,6 +43,13 @@
     });
 </script>
 
+@php
+    $user = auth()->user();
+    $roleName = $user?->role?->role ?? $user?->role;
+    $roleKey = strtolower(str_replace(' ', '_', (string) $roleName));
+    $canSeePoliMenu = ($roleKey === 'admin');
+@endphp
+
 <body class="@yield('body-class')">
 
     <!-- ======= Header ======= -->
@@ -54,7 +61,7 @@
                 <span class="d-none d-lg-block">Antrian Online</span>
             </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>
-        </div><!-- End Logo -->
+        </div>
 
         <div class="search-bar">
             <form class="search-form d-flex align-items-center"
@@ -70,7 +77,6 @@
                 </button>
             </form>
         </div>
-        <!-- End Search Bar -->
 
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
@@ -79,7 +85,7 @@
                     <a class="nav-link nav-icon search-bar-toggle " href="#">
                         <i class="bi bi-search"></i>
                     </a>
-                </li><!-- End Search Icon-->
+                </li>
 
                 <li class="nav-item dropdown pe-3">
                     <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#"
@@ -105,19 +111,24 @@
                         </li>
 
                     </ul>
-                </li><!-- End Profile Nav -->
+                </li>
 
             </ul>
-        </nav><!-- End Icons Navigation -->
+        </nav>
 
-    </header><!-- End Header -->
+    </header>
+    <!-- End Header -->
 
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
+        @php
+            $roleRaw = auth()->user()->role?->role ?? auth()->user()->role ?? '';
+            $role = strtolower(str_replace(' ', '_', trim((string) $roleRaw)));
+        @endphp
 
         <ul class="sidebar-nav" id="sidebar-nav">
 
-            {{-- MENU DASHBOARD --}}
+            {{-- DASHBOARD --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? '' : 'collapsed' }}"
                    href="{{ route('admin.dashboard') }}">
@@ -126,88 +137,16 @@
                 </a>
             </li>
 
-            {{-- MENU DAFTAR ANTRIAN --}}
+            {{-- DATA PASIEN --}}
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-                    <i class="bx bx-bar-chart-square"></i>
-                    <span>Daftar Antrian</span>
-                    <i class="bi bi-chevron-down ms-auto"></i>
+                <a class="nav-link {{ request()->routeIs('admin.pasien.*') ? '' : 'collapsed' }}"
+                   href="{{ route('admin.pasien.index') }}">
+                    <i class="bx bx-user"></i>
+                    <span>Data Pasien</span>
                 </a>
-
-                <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliUmum">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli Umum</span>
-                            @if(($counts['umum'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['umum'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliGigi">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli Gigi</span>
-                            @if(($counts['gigi'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['gigi'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliTht">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli THT</span>
-                            @if(($counts['tht'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['tht'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliLansia">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli Lansia & Disabilitas</span>
-                            @if(($counts['lansia'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['lansia'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliBalita">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli Balita</span>
-                            @if(($counts['balita'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['balita'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliKia">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli KIA & KB</span>
-                            @if(($counts['kia'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['kia'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="/admin/dashboard/antrian/poliNifas">
-                            <i class="bi bi-circle"></i>
-                            <span>Poli Nifas/PNC</span>
-                            @if(($counts['nifas'] ?? 0) > 0)
-                                <span class="badge bg-danger ms-2">{{ $counts['nifas'] }}</span>
-                            @endif
-                        </a>
-                    </li>
-                </ul>
             </li>
 
-            {{-- MENU LAPORAN --}}
+            {{-- LAPORAN --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.laporan.*') ? '' : 'collapsed' }}"
                    href="{{ route('admin.laporan.index') }}">
@@ -216,7 +155,18 @@
                 </a>
             </li>
 
-            {{-- MENU ANALITIK --}}
+            {{-- ✅ AUDIT LOG (SUPER ADMIN ONLY) --}}
+            @if($role === 'super_admin')
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.audit.*') ? '' : 'collapsed' }}"
+                       href="{{ route('admin.audit.index') }}">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Audit Log</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- ANALITIK --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.analytics') ? '' : 'collapsed' }}"
                    href="{{ route('admin.analytics') }}">
@@ -225,7 +175,7 @@
                 </a>
             </li>
 
-            {{-- MENU LOGOUT DI BAWAH LAPORAN --}}
+            {{-- LOGOUT --}}
             <li class="nav-item mt-3">
                 <form action="/logout" method="POST">
                     @csrf
@@ -236,16 +186,16 @@
             </li>
 
         </ul>
-    </aside><!-- End Sidebar-->
+    </aside>
+    <!-- End Sidebar -->
 
-    {{-- main-class & section-class bisa dioverride per halaman --}}
     <main id="main" class="main @yield('main-class')">
         <section class="section @yield('section-class', 'dashboard')">
             @yield('content')
         </section>
-    </main><!-- End #main -->
+    </main>
+    <!-- End #main -->
 
-    <!-- ======= Footer ======= -->
     <footer id="footer" class="footer">
         <div class="copyright">
             &copy; Copyright <strong><span>Dicoding</span></strong>. All Rights Reserved
@@ -253,7 +203,7 @@
         <div class="credits">
             Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
         </div>
-    </footer><!-- End Footer -->
+    </footer>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
         <i class="bi bi-arrow-up-short"></i>
@@ -273,16 +223,12 @@
     <script src="/assetsDashboard/vendor/tinymce/tinymce.min.js"></script>
     <script src="/assetsDashboard/vendor/php-email-form/validate.js"></script>
 
-    <!-- Template Main JS File -->
     <script src="/assetsDashboard/js/main.js"></script>
 
     @yield('script')
     @livewireScripts
 
-    {{-- script JS global punya admin --}}
     <script src="{{ asset('js/app.js') }}"></script>
-
-    {{-- supaya script dari @push('scripts') ikut ke-load --}}
     @stack('scripts')
 </body>
 </html>

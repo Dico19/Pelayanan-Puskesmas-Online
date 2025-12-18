@@ -4,56 +4,50 @@ namespace App\Http\Controllers;
 
 use App\Models\Antrian;
 use App\Models\Patient;
+use App\Models\RekamMedik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\PDF;
 use Carbon\Carbon;
 
 class FrontAntrianController extends Controller
 {
     /**
-     * Halaman form ambil antrian (view utama antrian).
+     * Guard: kalau antrian sudah dipanggil dokter,
+     * pasien tidak boleh edit/hapus/status.
+     * Arahkan ke halaman diagnosa.
      */
+    private function blockIfCalled(Antrian $antrian, string $msg = null)
+    {
+        if ((int) $antrian->is_call === 1) {
+            return redirect()
+                ->route('antrian.rekam-medik', $antrian->id)
+                ->with('error', $msg ?? 'Antrian sudah dipanggil dokter. Anda hanya bisa melihat diagnosa/rekam medik.');
+        }
+        return null;
+    }
+
     public function index()
     {
         return view('antrian.index');
     }
 
-    /**
-     * Kalau suatu saat mau pisah form create, sekarang diarahkan ke index saja.
-     */
     public function create()
     {
         return redirect()->route('antrian.index');
     }
 
-    /**
-     * Halaman form cari antrian via NIK.
-     * URL: GET /antrian/cari
-     */
     public function showCariAntrianForm()
     {
         return view('antrian.cari-nik');
     }
 
-    /**
-     * Alias lama: supaya route yang masih pakai 'cariProses'
-     * tetap jalan. Dia cuma meneruskan ke searchByNik().
-     *
-     * URL: POST /antrian/cari
-     */
     public function cariProses(Request $request)
     {
         return $this->searchByNik($request);
     }
 
-    /**
-     * Proses pencarian antrian berdasarkan NIK (no_ktp).
-     * URL: POST /antrian/cari
-     */
     public function searchByNik(Request $request)
     {
-        // Validasi basic
         $request->validate([
             'no_ktp' => 'required|string',
         ], [
@@ -62,12 +56,10 @@ class FrontAntrianController extends Controller
 
         $nik = $request->no_ktp;
 
-        // 1 NIK bisa punya beberapa antrian di tanggal berbeda
         $antrians = Antrian::where('no_ktp', $nik)
             ->orderByDesc('tanggal_antrian')
             ->get();
 
-        // Jika tidak ada data antrian untuk NIK tsb
         if ($antrians->isEmpty()) {
             return back()
                 ->withInput()
@@ -81,19 +73,29 @@ class FrontAntrianController extends Controller
     }
 
     /**
-     * Halaman tiket antrian (untuk cetak tiket + QR status + QR survei)
-     * URL: /antrian/tiket/{id}
+     * ✅ Halaman Rekam Medik untuk PASIEN
+     * hanya boleh kalau sudah dipanggil (is_call=1)
      */
+    public function rekamMedik(Antrian $antrian)
+    {
+        if ((int) $antrian->is_call !== 1) {
+            return redirect()
+                ->route('antrian.cari')
+                ->with('error', 'Rekam medik belum tersedia. Pasien belum dipanggil.');
+        }
+
+        $rekam = RekamMedik::where('antrian_id', $antrian->id)->first();
+
+        return view('antrian.rekam-medik', compact('antrian', 'rekam'));
+    }
+
     public function tiketAntrian($id)
     {
         $antrian = Antrian::findOrFail($id);
 
-        /** -------- QR 1: STATUS ANTRIAN -------- */
         $statusUrl = route('antrian.status', $antrian->id);
         $qrStatus  = $this->generateQrDataUri($statusUrl);
 
-        /** -------- QR 2: SURVEY GOOGLE FORM -------- */
-        // Ganti link ini pakai link Google Form survei kepuasan kamu sendiri
         $surveyUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdoPhLJcn4n4TdPje5dvg9AiBh-uVzu58DHW6ZvML6wjLlsgg/viewform?usp=header';
         $qrSurvey  = $this->generateQrDataUri($surveyUrl);
 
@@ -104,28 +106,16 @@ class FrontAntrianController extends Controller
         ]);
     }
 
-    /**
-     * Helper kecil: generate QR dengan Google Chart, lalu kembalikan data URI base64.
-     */
     protected function generateQrDataUri(string $text, int $size = 280): string
     {
-        $url = 'https://chart.googleapis.com/chart?chs=' . $size . 'x' . $size . '&cht=qr&chl='
-             . urlencode($text);
+        $url = 'https://chart.googleapis.com/chart?chs=' . $size . 'x' . $size . '&cht=qr&chl=' . urlencode($text);
 
-        // Ambil PNG dari Google Chart
         $png = @file_get_contents($url);
-
-        // Kalau gagal (misal tidak ada internet), balikin string kosong biar view bisa handle
-        if ($png === false) {
-            return '';
-        }
+        if ($png === false) return '';
 
         return 'data:image/png;base64,' . base64_encode($png);
     }
 
-    /**
-     * Simpan antrian baru dari form publik.
-     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -137,18 +127,15 @@ class FrontAntrianController extends Controller
             'tgl_lahir'       => 'required|date',
             'pekerjaan'       => 'nullable|string',
             'poli'            => 'required|string',
-            'tanggal_antrian' => 'nullable|date', // boleh dikirim dari form
+            'tanggal_antrian' => 'nullable|date',
         ]);
 
-        // Tanggal layanan: dari form kalau ada, kalau tidak pakai hari ini
         $tanggalLayanan = !empty($data['tanggal_antrian'])
             ? Carbon::parse($data['tanggal_antrian'])->toDateString()
             : now()->toDateString();
 
-        // Cek pasien berdasarkan NIK
         $patient = Patient::where('no_ktp', $data['no_ktp'])->first();
 
-        // Kalau belum ada, buat pasien baru
         if (! $patient) {
             $patient = Patient::create([
                 'nama'          => $data['nama'],
@@ -161,7 +148,6 @@ class FrontAntrianController extends Controller
             ]);
         }
 
-        // Generate nomor antrian berdasarkan poli & tanggal layanan
         $noAntrian = $this->generateNoAntrianForDate($data['poli'], $tanggalLayanan);
 
         $antrian = Antrian::create([
@@ -185,19 +171,20 @@ class FrontAntrianController extends Controller
             ->with('success', 'Berhasil mengambil nomor antrian: ' . $antrian->no_antrian);
     }
 
-    /**
-     * Detail antrian.
-     */
     public function show(Antrian $antrian)
     {
         return view('antrian.show', compact('antrian'));
     }
 
     /**
-     * Halaman status antrian (dipakai di QR status).
+     * ✅ Status: BLOK kalau sudah dipanggil (langsung ke diagnosa)
      */
     public function status(Antrian $antrian)
     {
+        if ($resp = $this->blockIfCalled($antrian, 'Antrian sudah dipanggil. Silakan lihat diagnosa/rekam medik.')) {
+            return $resp;
+        }
+
         $orangDiDepan = Antrian::where('poli', $antrian->poli)
             ->whereDate('tanggal_antrian', $antrian->tanggal_antrian)
             ->where('is_call', 0)
@@ -214,9 +201,6 @@ class FrontAntrianController extends Controller
         ]);
     }
 
-    /**
-     * Profil pasien + riwayat antrian.
-     */
     public function profilPasien($id)
     {
         $pasien = Patient::findOrFail($id);
@@ -232,9 +216,6 @@ class FrontAntrianController extends Controller
         ]);
     }
 
-    /**
-     * Kartu pasien.
-     */
     public function kartuPasien($id)
     {
         $pasien = Patient::findOrFail($id);
@@ -244,13 +225,10 @@ class FrontAntrianController extends Controller
         ]);
     }
 
-    /**
-     * Form edit antrian dari sisi pasien.
-     * (biodata + poli + tanggal)
-     */
     public function edit(Antrian $antrian)
     {
-        // daftar poli (disamakan dengan generateNoAntrianForDate)
+        if ($resp = $this->blockIfCalled($antrian)) return $resp;
+
         $poliOptions = [
             'umum'                 => 'Umum',
             'gigi'                 => 'Gigi',
@@ -261,7 +239,6 @@ class FrontAntrianController extends Controller
             'lansia & disabilitas' => 'Lansia & Disabilitas',
         ];
 
-        // 6 hari ke depan, tidak termasuk hari Minggu
         $tanggalOptions = [];
         $date = now();
         $count = 0;
@@ -281,12 +258,10 @@ class FrontAntrianController extends Controller
         ]);
     }
 
-    /**
-     * Update data antrian.
-     * Sekarang bisa ubah biodata + poli + tanggal antrian.
-     */
     public function update(Request $request, Antrian $antrian)
     {
+        if ($resp = $this->blockIfCalled($antrian)) return $resp;
+
         $data = $request->validate([
             'nama'            => 'required|string|max:255',
             'alamat'          => 'required|string',
@@ -304,11 +279,10 @@ class FrontAntrianController extends Controller
             ->with('success', 'Data antrian berhasil diperbarui.');
     }
 
-        /**
-     * Hapus antrian.
-     */
     public function destroy(Antrian $antrian)
     {
+        if ($resp = $this->blockIfCalled($antrian)) return $resp;
+
         $antrian->delete();
 
         return redirect()
@@ -316,17 +290,11 @@ class FrontAntrianController extends Controller
             ->with('success', 'Antrian berhasil dihapus.');
     }
 
-    /**
-     * Generate nomor antrian berdasarkan poli + tanggal (default hari ini).
-     */
     protected function generateNoAntrian(string $poli): string
     {
         return $this->generateNoAntrianForDate($poli, now()->toDateString());
     }
 
-    /**
-     * Generate nomor antrian berdasarkan poli + tanggal tertentu.
-     */
     protected function generateNoAntrianForDate(string $poli, string $tanggal): string
     {
         $prefixMap = [

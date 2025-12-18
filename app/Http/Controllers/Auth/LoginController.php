@@ -3,44 +3,42 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
+use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    // protected $redirectTo = RouteServiceProvider::HOME;
-    protected function redirectTo()
+    private function roleSlug($user): string
     {
-        if (auth()->user()->role_id == 1) {
-            return '/dashboard';
-        } else {
-            return '/antrian';
-        }
+        // dukung role string langsung ATAU relasi role->role
+        $roleRaw = $user?->role?->role ?? $user?->role ?? '';
+        return strtolower(str_replace(' ', '_', trim((string) $roleRaw)));
     }
 
     /**
-     * Create a new controller instance.
-     *
-     * @return void
+     * Paksa redirect setelah login sesuai role
+     * (bypass redirect()->intended supaya tidak nyasar ke halaman pasien).
      */
+    protected function authenticated(Request $request, $user)
+    {
+        // optional tapi sangat membantu biar tidak balik ke halaman terakhir (pasien)
+        $request->session()->forget('url.intended');
+
+        $role = $this->roleSlug($user);
+
+        if ($role === 'super_admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if (str_starts_with($role, 'dokter_')) {
+            return redirect()->route('dokter.dashboard');
+        }
+
+        return redirect()->route('home');
+    }
+
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
