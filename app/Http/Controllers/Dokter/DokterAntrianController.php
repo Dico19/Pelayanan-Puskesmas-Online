@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Dokter;
 use App\Http\Controllers\Controller;
 use App\Models\Antrian;
 use App\Models\AuditLog;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -83,6 +82,9 @@ class DokterAntrianController extends Controller
             'is_call' => $a->is_call ?? null,
             'no_antrian' => $a->no_antrian ?? null,
             'tanggal_antrian' => $a->tanggal_antrian ?? null,
+            'skip_count' => $a->skip_count ?? null,
+            'skipped_at' => optional($a->skipped_at)->toDateTimeString(),
+            'absent_at' => optional($a->absent_at)->toDateTimeString(),
             'updated_at' => optional($a->updated_at)->toDateTimeString(),
         ];
     }
@@ -105,7 +107,6 @@ class DokterAntrianController extends Controller
                 'user_agent' => substr((string) request()->userAgent(), 0, 500),
             ]);
         } catch (\Throwable $e) {
-            // ✅ audit gagal TIDAK BOLEH bikin aksi dokter crash
             Log::error('AuditLog gagal disimpan', [
                 'err' => $e->getMessage(),
                 'action' => $action,
@@ -143,6 +144,10 @@ class DokterAntrianController extends Controller
 
         $antrian->is_call = 1;
         $antrian->status = 'dipanggil';
+
+        // kalau sebelumnya tidak hadir, lalu dipanggil -> reset absent_at
+        $antrian->absent_at = null;
+
         $antrian->save();
 
         $antrian->refresh();
@@ -153,6 +158,8 @@ class DokterAntrianController extends Controller
         return back()->with('success', 'Antrian berhasil dipanggil.');
     }
 
+    // ✅ FIX: panggil ulang harus selalu set status=dipanggil
+    // biar pasien muncul lagi di TV monitor walau sebelumnya "dilewati"
     public function panggilUlang($antrianId)
     {
         $antrian = Antrian::findOrFail($antrianId);
@@ -161,7 +168,9 @@ class DokterAntrianController extends Controller
         $before = $this->snapshot($antrian);
 
         $antrian->is_call = 1;
-        if (empty($antrian->status)) $antrian->status = 'dipanggil';
+        $antrian->status  = 'dipanggil';
+        $antrian->absent_at = null;
+
         $antrian->save();
 
         $antrian->refresh();
@@ -209,14 +218,27 @@ class DokterAntrianController extends Controller
         return back()->with('success', 'Antrian ditandai selesai.');
     }
 
+    // ✅ LEWATI: bisa ditekan berulang, skip_count naik
     public function lewati($antrianId)
     {
         $antrian = Antrian::findOrFail($antrianId);
         $this->ensurePoliAccess($antrian);
 
+        $status = strtolower(trim((string) ($antrian->status ?? '')));
+
+        // jangan bisa skip kalau sudah selesai / tidak hadir
+        if (in_array($status, ['selesai', 'tidak_hadir'], true)) {
+            return back()->with('error', 'Aksi tidak bisa dilakukan karena antrian sudah selesai / tidak hadir.');
+        }
+
         $before = $this->snapshot($antrian);
 
         $antrian->status = 'dilewati';
+        $antrian->is_call = 1;
+
+        $antrian->skip_count = (int) ($antrian->skip_count ?? 0) + 1;
+        $antrian->skipped_at = now();
+
         $antrian->save();
 
         $antrian->refresh();
@@ -224,6 +246,41 @@ class DokterAntrianController extends Controller
 
         $this->writeAudit($antrian, 'lewati', $before, $after);
 
-        return back()->with('success', 'Antrian dilewati.');
+        return back()->with('success', 'Antrian dilewati. Skip ke-' . ($antrian->skip_count ?? 0));
+    }
+
+    // ✅ TIDAK HADIR: hanya setelah DILEWATI minimal 2x, dan status terakhir = dilewati
+    public function tidakHadir($antrianId)
+    {
+        $antrian = Antrian::findOrFail($antrianId);
+        $this->ensurePoliAccess($antrian);
+
+        $status = strtolower(trim((string) ($antrian->status ?? '')));
+
+        if (in_array($status, ['selesai', 'tidak_hadir'], true)) {
+            return back()->with('error', 'Antrian sudah selesai / sudah ditandai tidak hadir.');
+        }
+
+        $skipCount = (int) ($antrian->skip_count ?? 0);
+
+        // ✅ syarat utama
+        if ($status !== 'dilewati' || $skipCount < 2) {
+            return back()->with('error', 'Tidak hadir hanya bisa setelah antrian DILEWATI minimal 2x.');
+        }
+
+        $before = $this->snapshot($antrian);
+
+        $antrian->status    = 'tidak_hadir';
+        $antrian->absent_at = now();
+        $antrian->is_call   = 1;
+
+        $antrian->save();
+
+        $antrian->refresh();
+        $after = $this->snapshot($antrian);
+
+        $this->writeAudit($antrian, 'tidak_hadir', $before, $after);
+
+        return back()->with('success', 'Pasien ditandai: Tidak Hadir.');
     }
 }

@@ -220,3 +220,39 @@
   new PureCounter();
 
 })()
+
+// =========================
+// DARK MODE TOGGLE (PK)
+// =========================
+(function () {
+  const KEY = "pk_theme";
+  const body = document.body;
+  const btn = document.getElementById("themeToggle");
+
+  function apply(theme) {
+    const isDark = theme === "dark";
+    body.classList.toggle("dark-mode", isDark);
+
+    if (!btn) return;
+    btn.innerHTML = isDark
+      ? '<i class="bi bi-sun me-1"></i> Terang'
+      : '<i class="bi bi-moon me-1"></i> Gelap';
+  }
+
+  // load theme
+  const saved = localStorage.getItem(KEY);
+  if (saved) {
+    apply(saved);
+  } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    apply("dark");
+  }
+
+  // click toggle
+  if (btn) {
+    btn.addEventListener("click", function () {
+      const next = body.classList.contains("dark-mode") ? "light" : "dark";
+      localStorage.setItem(KEY, next);
+      apply(next);
+    });
+  }
+})();

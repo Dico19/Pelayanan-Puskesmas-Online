@@ -1,22 +1,24 @@
 @extends('layouts.main')
 
-@include('partials.navbar')
+@section('title', 'Ambil Antrian')
 
 @section('content')
-    <div style="height: 800px">
-        <livewire:antrian.show-antrian>
+    <div style="margin-top: 150px; min-height: 600px;">
+        <livewire:antrian.show-antrian />
     </div>
 @endsection
 
-@section('script')
-    <script>
-        window.addEventListener('closeModal', event => {
-            $('#createAntrian').modal('hide')
-            $('#editAntrian').modal('hide')
-            $('#deleteAntrian').modal('hide')
-        })
-    
-    </script>
-@endsection
+@push('scripts')
+<script>
+    window.addEventListener('closeModal', () => {
+        const ids = ['createAntrian', 'editAntrian', 'deleteAntrian'];
+        ids.forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
 
-@include('partials.footer')
+            const instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+            instance.hide();
+        });
+    });
+</script>
+@endpush

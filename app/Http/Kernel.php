@@ -67,5 +67,7 @@ class Kernel extends HttpKernel
         'redirectifauthenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'CheckRole' => \App\Http\Middleware\CheckRole::class,
         'dokter' => \App\Http\Middleware\DokterOnly::class,
+        'role_prefix' => \App\Http\Middleware\RolePrefix::class,
+
     ];
 }

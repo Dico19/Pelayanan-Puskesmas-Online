@@ -1,0 +1,223 @@
+/* =========================
+   ANTRIAN PAGE (LIST + TABLE)
+   ========================= */
+
+.antrian-wrap{
+  padding: 28px 0 10px;
+}
+
+/* ===== HERO ===== */
+.antrian-hero{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.antrian-title{
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: .01em;
+  color: #0f172a;
+}
+
+.antrian-sub{
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ===== CTA BUTTON ===== */
+.antrian-cta{
+  border: 0 !important;
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
+  font-weight: 900;
+  color: #fff !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #0ea5e9 100%) !important;
+  box-shadow: 0 12px 26px rgba(2, 132, 199, 0.18);
+  transition: .15s ease;
+  white-space: nowrap;
+}
+
+.antrian-cta:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(2, 132, 199, 0.28);
+}
+
+.antrian-cta:active{
+  transform: translateY(0px);
+}
+
+/* ===== MAIN CARD ===== */
+.antrian-card{
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.antrian-card__top{
+  padding: 14px 16px;
+  background: #f8fbff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.antrian-card__top .label{
+  font-weight: 900;
+  color: #0f172a;
+}
+
+/* ===== FILTER SELECT ===== */
+.antrian-filter{
+  min-width: 260px;
+}
+
+.antrian-filter .form-select{
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 10px 12px !important;
+  font-weight: 700;
+  color: #0f172a;
+  box-shadow: none !important;
+}
+
+.antrian-filter .form-select:focus{
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 .20rem rgba(59, 130, 246, .15) !important;
+}
+
+/* ===== TABLE WRAPPER ===== */
+.antrian-table-wrap{
+  padding: 0 0 12px;
+}
+
+.table-responsive.antrian-scroll{
+  max-height: 420px;
+  overflow: auto;
+}
+
+/* ===== TABLE ===== */
+.antrian-table{
+  margin: 0;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Header */
+.antrian-table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  font-weight: 900;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 12px 12px !important;
+}
+
+/* Body */
+.antrian-table tbody td{
+  padding: 12px 12px !important;
+  border-bottom: 1px solid #eef2f7 !important;
+  vertical-align: middle;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Zebra + hover */
+.antrian-table tbody tr:nth-child(odd){
+  background: #fbfdff;
+}
+
+.antrian-table tbody tr:hover{
+  background: #eff6ff;
+}
+
+/* ===== BADGES ===== */
+.badge-poli{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: .02em;
+  background: rgba(37, 99, 235, .12);
+  color: #1d4ed8;
+}
+
+.badge-date{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 11px;
+  background: rgba(34, 197, 94, .12);
+  color: #15803d;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 576px){
+  .antrian-filter{
+    min-width: 100%;
+  }
+}
+
+/* =========================
+   DARK MODE (optional)
+   ========================= */
+.dark-mode .antrian-title{ color: #e5e7eb; }
+.dark-mode .antrian-sub{ color: #cbd5e1; }
+
+.dark-mode .antrian-card{
+  background: #0b1220;
+  border-color: #1f2937;
+}
+
+.dark-mode .antrian-card__top{
+  background: #0f172a;
+  border-color: #1f2937;
+}
+
+.dark-mode .antrian-table thead th{
+  background: #0b1220;
+  color: #e5e7eb;
+  border-color: #1f2937 !important;
+}
+
+.dark-mode .antrian-table tbody td{
+  color: #e5e7eb;
+  border-color: #111827 !important;
+}
+
+.dark-mode .antrian-table tbody tr:nth-child(odd){
+  background: #0b1220;
+}
+
+.dark-mode .antrian-table tbody tr:hover{
+  background: #0f172a;
+}
+
+.dark-mode .antrian-filter .form-select{
+  background: #111827;
+  color: #e5e7eb;
+  border-color: #334155 !important;
+}

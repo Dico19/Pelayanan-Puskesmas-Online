@@ -25,6 +25,18 @@ class Antrian extends Model
         'pekerjaan',
         'is_call',
         'tanggal_antrian',
+
+        // ✅ tambahan flow
+        'status',
+        'skip_count',
+        'skipped_at',
+        'absent_at',
+    ];
+
+    protected $casts = [
+        'tanggal_antrian' => 'date',
+        'skipped_at'      => 'datetime',
+        'absent_at'       => 'datetime',
     ];
 
     // Relasi ke patient

@@ -1,0 +1,375 @@
+/* =========================================================
+   ANTRIAN UI (MODAL STEP 1 & 2)
+   - Poli cards (Step 1)
+   - Tanggal cards (Step 2)
+   Support class:
+   - libur: .disabled OR .is-libur
+   - selected: .active OR .is-selected
+   ========================================================= */
+
+/* ---------- Layout helpers ---------- */
+.poli-subtitle {
+  font-size: 13px;
+  opacity: .75;
+}
+
+/* =========================================================
+   STEP 1 : PILIH POLI
+   ========================================================= */
+.poli-grid{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 992px){
+  .poli-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 576px){
+  .poli-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.poli-card{
+  width: 100%;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #0f172a;
+  border-radius: 14px;
+  padding: 14px 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: .15s ease;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.poli-card:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.16);
+}
+
+.poli-icon{
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  margin: 0 auto 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  font-size: 20px;
+}
+
+.poli-label{
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+/* Poli selected (hijau) */
+.poli-card.is-selected{
+  background: #ecfdf5;
+  border-color: #86efac;
+  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.20);
+}
+.poli-card.is-selected .poli-icon{
+  background: rgba(34,197,94,.12);
+  color: #15803d;
+}
+
+/* =========================================================
+   STEP 2 : PILIH TANGGAL
+   ========================================================= */
+.tanggal-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 992px){
+  .tanggal-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 576px){
+  .tanggal-grid{ grid-template-columns: 1fr; }
+}
+
+.tanggal-card{
+  width: 100%;
+  border: 1px solid #dbeafe;
+  background: #eff6ff; /* default biru */
+  color: #0f172a;
+  padding: 14px;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: .15s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.08);
+}
+
+/* “ornamen” kanan atas */
+.tanggal-card::after{
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 90px;
+  height: 90px;
+  background: rgba(37, 99, 235, .10);
+  transform: rotate(20deg);
+  border-radius: 16px;
+}
+
+.tanggal-card:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.16);
+}
+
+/* teks */
+.tanggal-card .hari{
+  font-weight: 800;
+  letter-spacing: .02em;
+  font-size: 14px;
+}
+.tanggal-card .tanggal{
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+.tanggal-card .bulan{
+  font-size: 12px;
+  opacity: .8;
+  margin-top: 2px;
+}
+.tanggal-card .jumlah{
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .12);
+  color: #1d4ed8;
+}
+
+/* Selected (hijau): support .active dan .is-selected */
+.tanggal-card.active,
+.tanggal-card.is-selected{
+  background: #ecfdf5;
+  border-color: #86efac;
+  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.20);
+}
+.tanggal-card.active::after,
+.tanggal-card.is-selected::after{
+  background: rgba(34, 197, 94, .14);
+}
+.tanggal-card.active .jumlah,
+.tanggal-card.is-selected .jumlah{
+  background: rgba(34, 197, 94, .12);
+  color: #15803d;
+}
+
+/* Libur/Minggu (merah): support .disabled dan .is-libur */
+.tanggal-card.disabled,
+.tanggal-card.is-libur{
+  background: #fef2f2;
+  border-color: #fecaca;
+  cursor: not-allowed;
+  opacity: .95;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.10);
+}
+.tanggal-card.disabled::after,
+.tanggal-card.is-libur::after{
+  background: rgba(239, 68, 68, .14);
+}
+.tanggal-card.disabled .jumlah,
+.tanggal-card.is-libur .jumlah{
+  background: rgba(239, 68, 68, .12);
+  color: #b91c1c;
+}
+.tanggal-card.disabled:hover,
+.tanggal-card.is-libur:hover{
+  transform: none;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.10);
+}
+
+/* Optional: teks libur */
+.text-libur{
+  color: #b91c1c !important;
+}
+/* ===== STEP 3 FORM STYLE ===== */
+.pk-form-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 14px;
+  border-radius:14px;
+  background:#eff6ff;
+  border:1px solid #dbeafe;
+  box-shadow:0 8px 18px rgba(2,132,199,.10);
+  flex-wrap:wrap;
+}
+
+.pk-form-head__left{ min-width: 240px; }
+.pk-form-head__right{ min-width: 220px; }
+
+.pk-head-label{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.03em;
+  color:#64748b;
+  text-transform:uppercase;
+}
+
+.pk-head-value{ margin-top:4px; }
+
+.pk-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:12px;
+}
+
+.pk-badge--blue{
+  background:rgba(37,99,235,.12);
+  color:#1d4ed8;
+}
+
+.pk-badge--green{
+  background:rgba(34,197,94,.12);
+  color:#15803d;
+}
+
+.pk-btn-soft{
+  border-radius:10px !important;
+}
+
+.pk-form-body{
+  padding:12px 0 2px;
+}
+
+.pk-label{
+  font-weight:800;
+  font-size:12px;
+  color:#334155;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:6px;
+}
+
+.pk-input{
+  border-radius:12px !important;
+  border:1px solid #e2e8f0 !important;
+  background:#ffffff;
+  padding:10px 12px !important;
+  box-shadow:none !important;
+}
+
+.pk-input:focus{
+  border-color:#60a5fa !important;
+  box-shadow:0 0 0 .20rem rgba(59,130,246,.15) !important;
+}
+
+.pk-help{
+  font-size:12px;
+  color:#64748b;
+  margin-top:6px;
+}
+
+.pk-note{
+  border:1px solid #bfdbfe;
+  background:#eff6ff;
+  color:#0f172a;
+  padding:10px 12px;
+  border-radius:12px;
+  font-weight:600;
+  font-size:13px;
+}
+
+/* Dark mode optional (kalau kamu pakai .dark-mode) */
+.dark-mode .pk-form-head,
+.dark-mode .pk-note{
+  background:#1f2937 !important;
+  border-color:#334155 !important;
+  color:#e5e7eb !important;
+}
+.dark-mode .pk-label{ color:#cbd5e1 !important; }
+.dark-mode .pk-input{
+  background:#111827 !important;
+  border-color:#334155 !important;
+  color:#e5e7eb !important;
+}
+
+/* =========================================================
+   BUTTON SUBMIT (STEP 3) - Ambil Antrian Sekarang
+   class: .pk-submit (dipakai di <button type="submit">)
+   ========================================================= */
+
+.pk-submit{
+  border: 0 !important;
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
+  font-weight: 900;
+  letter-spacing: .02em;
+  box-shadow: 0 12px 26px rgba(2, 132, 199, 0.18);
+  transition: .15s ease;
+  position: relative;
+  overflow: hidden;
+
+  /* gradient biru */
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #0ea5e9 100%) !important;
+  color: #fff !important;
+}
+
+/* glow / shine */
+.pk-submit::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35), transparent 45%);
+  opacity: .9;
+  pointer-events:none;
+}
+
+/* hover */
+.pk-submit:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(2, 132, 199, 0.28);
+  filter: brightness(1.03);
+}
+
+/* active klik */
+.pk-submit:active{
+  transform: translateY(0px);
+  box-shadow: 0 10px 22px rgba(2, 132, 199, 0.22);
+}
+
+/* disabled + loading */
+.pk-submit:disabled,
+.pk-submit[disabled]{
+  opacity: .75;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 10px 22px rgba(2, 132, 199, 0.14);
+}
+
+/* kalau kamu mau tombol versi hijau (opsional)
+   tinggal tambahin class pk-submit--green di button */
+.pk-submit--green{
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 45%, #10b981 100%) !important;
+  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.18);
+}
+.pk-submit--green:hover{
+  box-shadow: 0 16px 34px rgba(34, 197, 94, 0.28);
+}
+
+/* Dark mode */
+.dark-mode .pk-submit{
+  box-shadow: 0 14px 30px rgba(59,130,246,.22);
+}

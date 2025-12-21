@@ -1,0 +1,101 @@
+/* ===== REKAM MEDIK (Diagnosa) ===== */
+.pk-rekam-medik {
+  margin-top: 90px;
+  padding-bottom: 70px;
+}
+
+/* header */
+.pk-rekam-medik .pk-rm-title {
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.pk-rekam-medik .pk-rm-meta {
+  font-size: 13px;
+  color: rgba(100,116,139,.95);
+}
+
+.pk-rekam-medik .pk-rm-back {
+  border-radius: 999px;
+  padding: .45rem 1rem;
+}
+
+/* card utama */
+.pk-rekam-medik .pk-rm-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* box kecil (Nama / Tanggal) */
+.pk-rekam-medik .pk-rm-mini {
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.pk-rekam-medik .pk-rm-label {
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: rgba(100,116,139,.95);
+  margin-bottom: 4px;
+}
+
+.pk-rekam-medik .pk-rm-value {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* isi diagnosa / catatan / resep */
+.pk-rekam-medik .pk-rm-box {
+  border-radius: 16px;
+  padding: 14px 16px;
+  line-height: 1.55;
+  background: #fff;
+}
+
+/* ===== DARK MODE: pakai body.pk-dark ===== */
+body.pk-dark .pk-rekam-medik .pk-rm-title,
+body.pk-dark .pk-rekam-medik .pk-rm-value,
+body.pk-dark .pk-rekam-medik .pk-rm-box {
+  color: rgba(229,231,235,.96);
+}
+
+body.pk-dark .pk-rekam-medik .pk-rm-meta,
+body.pk-dark .pk-rekam-medik .pk-rm-label,
+body.pk-dark .pk-rekam-medik .text-muted,
+body.pk-dark .pk-rekam-medik .small {
+  color: rgba(229,231,235,.70) !important;
+}
+
+/* card */
+body.pk-dark .pk-rekam-medik .pk-rm-card {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+}
+
+/* mini box (nama/tanggal) */
+body.pk-dark .pk-rekam-medik .pk-rm-mini {
+  background: rgba(2, 6, 23, 0.35) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+}
+
+/* box diagnosa/catatan/resep */
+body.pk-dark .pk-rekam-medik .pk-rm-box {
+  background: rgba(2, 6, 23, 0.28) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+}
+
+/* alert di dark biar rapi */
+body.pk-dark .pk-rekam-medik .alert {
+  border: 1px solid rgba(255,255,255,.10) !important;
+}
+
+/* tombol kembali di dark */
+body.pk-dark .pk-rekam-medik .btn-outline-secondary {
+  color: rgba(229,231,235,.92) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  background: rgba(255,255,255,.04) !important;
+}
+body.pk-dark .pk-rekam-medik .btn-outline-secondary:hover {
+  background: rgba(255,255,255,.08) !important;
+}

@@ -1,217 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Dashboard - Antrian Online Puskesmas</title>
-    <meta content="" name="description">
-    <meta content="" name="keywords">
+    <title>@yield('title', 'Antrian Online Puskesmas Kaligandu')</title>
 
-    <link href="/assetsDashboard/img/favicon.png" rel="icon">
-    <link href="/assetsDashboard/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="{{ asset('assets/img/favicon.png') }}" rel="icon">
+    <link href="{{ asset('assets/img/apple-touch-icon.png') }}" rel="apple-touch-icon">
 
     <link href="https://fonts.gstatic.com" rel="preconnect">
-    <link
-        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+          rel="stylesheet">
 
-    <link href="/assetsDashboard/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/assetsDashboard/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="/assetsDashboard/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-    <link href="/assetsDashboard/vendor/quill/quill.snow.css" rel="stylesheet">
-    <link href="/assetsDashboard/vendor/quill/quill.bubble.css" rel="stylesheet">
-    <link href="/assetsDashboard/vendor/remixicon/remixicon.css" rel="stylesheet">
-    <link href="/assetsDashboard/vendor/simple-datatables/style.css" rel="stylesheet">
+    {{-- ✅ Swiper CSS --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
-    <link href="/assetsDashboard/css/style.css" rel="stylesheet">
+    <!-- Vendor CSS -->
+    <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/aos/aos.css') }}" rel="stylesheet">
 
-    <!-- ⭐ Custom Admin Theme -->
-    <link href="{{ asset('css/admin-theme.css') }}" rel="stylesheet">
+    <!-- Main Template CSS -->
+    <link href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}" rel="stylesheet">
 
+    <!-- ✅ CSS ANTRIAN -->
+    <link href="{{ asset('assets/css/antrian-status.css') }}?v={{ filemtime(public_path('assets/css/antrian-status.css')) }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/antrian-ui.css') }}?v={{ filemtime(public_path('assets/css/antrian-ui.css')) }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/antrian-page.css') }}?v={{ filemtime(public_path('assets/css/antrian-page.css')) }}" rel="stylesheet">
+
+    <!-- ✅ DARK MODE GLOBAL -->
+    <link href="{{ asset('assets/css/pk-dark.css') }}?v={{ filemtime(public_path('assets/css/pk-dark.css')) }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/pk-hasil-antrian.css') }}?v={{ filemtime(public_path('assets/css/pk-hasil-antrian.css')) }}" rel="stylesheet">
+    
+    <!-- ✅ CSS REKAM MEDIK (baru) -->
+<link href="{{ asset('assets/css/antrian-rekam.css') }}?v={{ filemtime(public_path('assets/css/antrian-rekam.css')) }}" rel="stylesheet">
+
+    {{-- ✅ FIX: Navbar selalu bisa diklik (z-index + anti overlay) --}}
+    <style>
+        /* Header/Topbar selalu paling atas */
+        #topbar { z-index: 3000 !important; }
+        #header { z-index: 2999 !important; }
+
+        /* Kalau ada section overlay/pseudo element yang nutup header, jangan makan klik */
+        .pk-queue-status,
+        .pk-queue-status::before,
+        .pk-queue-status::after {
+            pointer-events: none;
+        }
+        /* Tapi konten di dalamnya tetap bisa diklik */
+        .pk-queue-status .container,
+        .pk-queue-status .container * {
+            pointer-events: auto;
+        }
+    </style>
+
+    {{-- Livewire Styles --}}
     @livewireStyles
+
+    {{-- CSS khusus per halaman --}}
+    @stack('styles')
 </head>
-
-<script>
-    window.addEventListener('refreshPage', () => {
-        window.location.reload();
-    });
-</script>
-
-@php
-    $user = auth()->user();
-    $roleRaw = $user?->role?->role ?? $user?->role ?? '';
-    $role = strtolower(str_replace(' ', '_', trim((string) $roleRaw)));
-@endphp
 
 <body class="@yield('body-class')">
 
-    <!-- ======= Header ======= -->
-    <header id="header" class="header fixed-top d-flex align-items-center">
+    {{-- Navbar --}}
+    @include('partials.navbar')
 
-        <div class="d-flex align-items-center justify-content-between">
-            <a href="{{ route('admin.dashboard') }}" class="logo d-flex align-items-center">
-                <img src="/assetsDashboard/img/logo.png" alt="">
-                <span class="d-none d-lg-block">Antrian Online</span>
-            </a>
-            <i class="bi bi-list toggle-sidebar-btn"></i>
-        </div>
-
-        <div class="search-bar">
-            <form class="search-form d-flex align-items-center"
-                  method="GET"
-                  action="{{ route('admin.pasien.index') }}">
-                <input type="text"
-                       name="search"
-                       value="{{ request('search') }}"
-                       placeholder="Cari nama / NIK..."
-                       title="Masukkan kata kunci">
-                <button type="submit" title="Search">
-                    <i class="bi bi-search"></i>
-                </button>
-            </form>
-        </div>
-
-        <nav class="header-nav ms-auto">
-            <ul class="d-flex align-items-center">
-
-                <li class="nav-item d-block d-lg-none">
-                    <a class="nav-link nav-icon search-bar-toggle " href="#">
-                        <i class="bi bi-search"></i>
-                    </a>
-                </li>
-
-                <li class="nav-item dropdown pe-3">
-                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#"
-                       data-bs-toggle="dropdown">
-                        <img src="/assetsDashboard/img/profile-bahlil.jpg" alt="Profile" class="rounded-circle">
-                        <span class="d-none d-md-block dropdown-toggle ps-2">{{ auth()->user()->name }}</span>
-                    </a>
-
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-                        <li class="dropdown-header">
-                            <h6>{{ auth()->user()->name }}</h6>
-                        </li>
-
-                        <hr class="dropdown-divider">
-
-                        <li>
-                            <form action="/logout" method="post">
-                                @csrf
-                                <button type="submit" class="dropdown-item">
-                                    <span class="align-middle">Logout</span>
-                                </button>
-                            </form>
-                        </li>
-
-                    </ul>
-                </li>
-
-            </ul>
-        </nav>
-
-    </header>
-    <!-- End Header -->
-
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
-        <ul class="sidebar-nav" id="sidebar-nav">
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.dashboard') }}">
-                    <i class="bx bxs-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.pasien.*') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.pasien.index') }}">
-                    <i class="bx bx-user"></i>
-                    <span>Data Pasien</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.laporan.*') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.laporan.index') }}">
-                    <i class="bx bx-task"></i>
-                    <span>Laporan</span>
-                </a>
-            </li>
-
-            {{-- ✅ AUDIT LOG (super admin only) --}}
-            @if($role === 'super_admin')
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.audit.*') ? '' : 'collapsed' }}"
-                       href="{{ route('admin.audit.index') }}">
-                        <i class="bi bi-shield-check"></i>
-                        <span>Audit Log</span>
-                    </a>
-                </li>
-            @endif
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.analytics') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.analytics') }}">
-                    <i class="bi bi-graph-up"></i>
-                    <span>Analitik</span>
-                </a>
-            </li>
-
-            <li class="nav-item mt-3">
-                <form action="/logout" method="POST">
-                    @csrf
-                    <button type="submit" class="btn sidebar-logout-red w-100 text-start px-3">
-                        <i class="bi bi-box-arrow-right me-2"></i> Logout
-                    </button>
-                </form>
-            </li>
-
-        </ul>
-    </aside>
-    <!-- End Sidebar -->
-
-    <main id="main" class="main @yield('main-class')">
-        <section class="section @yield('section-class', 'dashboard')">
+    <main id="main" class="main">
+        @hasSection('content')
             @yield('content')
-        </section>
+        @else
+            {{ $slot }}
+        @endif
     </main>
 
-    <footer id="footer" class="footer">
-        <div class="copyright">
-            &copy; Copyright <strong><span>Dicoding</span></strong>. All Rights Reserved
-        </div>
-        <div class="credits">
-            Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-        </div>
-    </footer>
+    {{-- Footer --}}
+    @include('partials.footer')
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
         <i class="bi bi-arrow-up-short"></i>
     </a>
 
-    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
-        integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU="
-        crossorigin="anonymous"></script>
+    <!-- Vendor JS -->
+    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/aos/aos.js') }}"></script>
+    <script src="{{ asset('assets/vendor/purecounter/purecounter_vanilla.js') }}"></script>
 
-    <script src="/assetsDashboard/vendor/apexcharts/apexcharts.min.js"></script>
-    <script src="/assetsDashboard/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/assetsDashboard/vendor/chart.js/chart.umd.js"></script>
-    <script src="/assetsDashboard/vendor/echarts/echarts.min.js"></script>
-    <script src="/assetsDashboard/vendor/quill/quill.min.js"></script>
-    <script src="/assetsDashboard/vendor/simple-datatables/simple-datatables.js"></script>
-    <script src="/assetsDashboard/vendor/tinymce/tinymce.min.js"></script>
-    <script src="/assetsDashboard/vendor/php-email-form/validate.js"></script>
+    <!-- Template JS -->
+    <script src="{{ asset('assets/js/main.js') }}"></script>
 
-    <script src="/assetsDashboard/js/main.js"></script>
+    {{-- Swiper JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    @yield('script')
+    {{-- ✅ DARK MODE TOGGLE JS --}}
+    <script src="{{ asset('assets/js/dark-mode.js') }}?v={{ filemtime(public_path('assets/js/dark-mode.js')) }}"></script>
+
+    {{-- Livewire Scripts --}}
     @livewireScripts
 
-    <script src="{{ asset('js/app.js') }}"></script>
+    {{-- ✅ FIX: Backdrop/modal nyangkut bikin navbar ga bisa diklik --}}
+    <script>
+        // Bootstrap Modal: kalau backdrop nyangkut, klik navbar (termasuk toggle gelap/terang) jadi mati.
+        document.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+        }, true);
+
+        // Offcanvas (opsional) - jaga-jaga kalau suatu saat pakai offcanvas
+        document.addEventListener('hidden.bs.offcanvas', function () {
+            document.querySelectorAll('.offcanvas-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('offcanvas-open');
+            document.body.style.removeProperty('padding-right');
+        }, true);
+
+        // Livewire navigasi / render ulang kadang bikin backdrop tersisa:
+        document.addEventListener('livewire:navigated', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.querySelectorAll('.offcanvas-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open', 'offcanvas-open');
+            document.body.style.removeProperty('padding-right');
+        });
+    </script>
+
+    {{-- Script khusus per halaman --}}
     @stack('scripts')
+    @yield('script')
 </body>
 </html>

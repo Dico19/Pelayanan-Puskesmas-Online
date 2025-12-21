@@ -1,3 +1,4 @@
+{{-- resources/views/tv/index.blade.php --}}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -84,7 +85,7 @@
 
     .current-poli{margin-top:16px;font-size:34px;text-transform:uppercase;letter-spacing:3px;}
 
-    /* ✅ STATUS BADGE (lebih profesional) */
+    /* ✅ STATUS BADGE */
     .status-badge{
       margin-top:12px;display:inline-flex;align-items:center;gap:8px;
       padding:6px 14px;border-radius:999px;
@@ -96,6 +97,8 @@
     .status-badge.status--dilayani{background: rgba(13,110,253,.18); color:#cfe2ff;}
     .status-badge.status--menunggu{background: rgba(108,117,125,.18); color:#e2e3e5;}
     .status-badge.status--selesai{background: rgba(25,135,84,.18); color:#b7f5d0;}
+    .status-badge.status--dilewati{background: rgba(220,53,69,.18); color:#ffd0d6;}
+    .status-badge.status--tidak_hadir{background: rgba(220,53,69,.18); color:#ffd0d6;}
 
     .status-dot{
       width:10px;height:10px;border-radius:999px;
@@ -176,7 +179,6 @@
         @endif
       </div>
 
-      {{-- ✅ Status tampil di TV --}}
       <div class="status-badge" id="status-badge" style="{{ $current ? '' : 'display:none;' }}">
         <span class="status-dot"></span>
         <span id="status-state">STATUS</span>
@@ -194,7 +196,7 @@
     <div class="glass-card">
       <div class="card-title">Nomor Berikutnya</div>
       <div id="next-list">
-        @if($next->count())
+        @if(isset($next) && $next->count())
           @foreach($next as $index => $row)
             <div class="next-item" style="animation-delay: {{ $index * 0.08 }}s">
               <div>
@@ -250,7 +252,7 @@
 
   let audioAllowed = false;
 
-  // ✅ kunci: bukan cuma nomor berubah, tapi triggerKey berubah (called_at/updated_at)
+  // ✅ triggerKey utama dari backend: called_key (dibuat dari updated_at)
   let lastTriggerKey = null;
 
   function playBell() {
@@ -278,7 +280,6 @@
   // ✅ klik sekali untuk aktifkan suara (kebijakan browser)
   document.addEventListener('click', () => {
     audioAllowed = true;
-    // tidak ada "contoh satu" biar profesional
   }, { once: true });
 
   function statusLabel(s) {
@@ -287,6 +288,7 @@
     if (s === 'dipanggil') return 'DIPANGGIL';
     if (s === 'selesai') return 'SELESAI';
     if (s === 'dilewati') return 'DILEWATI';
+    if (s === 'tidak_hadir') return 'TIDAK HADIR';
     return 'MENUNGGU';
   }
 
@@ -295,6 +297,8 @@
     if (s === 'dilayani') return 'status--dilayani';
     if (s === 'dipanggil') return 'status--dipanggil';
     if (s === 'selesai') return 'status--selesai';
+    if (s === 'dilewati') return 'status--dilewati';
+    if (s === 'tidak_hadir') return 'status--tidak_hadir';
     return 'status--menunggu';
   }
 
@@ -315,13 +319,12 @@
         const poli = String(data.current.poli || '').toUpperCase();
         const st = String(data.current.status || 'menunggu').toLowerCase();
 
-        // triggerKey berubah kalau dipanggil ulang (called_at berubah) meskipun nomor sama
-        const triggerKey = `${newNumber}|${data.current.called_at || ''}|${data.current.updated_at || ''}`;
+        // ✅ pakai called_key dari backend (pasti berubah saat panggil ulang karena updated_at berubah)
+        const triggerKey = String(data.current.called_key || '');
 
         currentNumberEl.textContent = newNumber;
         currentPoliEl.textContent   = 'POLI ' + poli;
 
-        // update status tampilan
         statusBadgeEl.className = 'status-badge ' + statusClass(st);
         statusStateEl.textContent = statusLabel(st);
         statusTextEl.textContent = (st === 'dilayani')
@@ -331,10 +334,10 @@
         statusBadgeEl.style.display = 'inline-flex';
         currentEmptyEl.style.display = 'none';
 
-        // animasi & suara hanya ketika triggerKey berubah (bukan hanya nomor)
+        // animasi & suara ketika called_key berubah (bukan hanya nomor)
         if (lastTriggerKey === null) {
           lastTriggerKey = triggerKey; // load pertama: tidak bunyi
-        } else if (triggerKey !== lastTriggerKey) {
+        } else if (triggerKey !== '' && triggerKey !== lastTriggerKey) {
           lastTriggerKey = triggerKey;
 
           currentNumberEl.classList.remove('current-number--highlight');

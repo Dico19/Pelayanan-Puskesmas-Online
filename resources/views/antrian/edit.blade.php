@@ -1,12 +1,42 @@
 @extends('layouts.main')
 
+@section('title', 'Edit Antrian')
+
 @section('content')
+@php
+    /**
+     * ✅ PRIORITAS balik:
+     * 1) ?back= dari hasil pencarian
+     * 2) fallback aman: hasil pencarian berdasarkan NIK antrian ini
+     * 3) terakhir: url sebelumnya
+     */
+    $backUrl = request('back');
+
+    if (!$backUrl && !empty($antrian->no_ktp)) {
+        $backUrl = route('antrian.cari', ['no_ktp' => $antrian->no_ktp]);
+    }
+
+    if (!$backUrl) {
+        $backUrl = url()->previous();
+    }
+@endphp
+
 <section class="py-5" style="margin-top: 90px;">
     <div class="container">
 
-        <h2 class="text-center fw-bold mb-4 text-uppercase">
-            Edit Antrian
-        </h2>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h2 class="fw-bold mb-0 text-uppercase">Edit Antrian</h2>
+                <div class="text-muted small">
+                    Silakan perbarui data antrian Anda.
+                </div>
+            </div>
+
+            {{-- ✅ Tombol kembali: selalu balik ke hasil pencarian --}}
+            <a href="{{ $backUrl }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+        </div>
 
         <div class="row justify-content-center">
             <div class="col-lg-10 col-xl-9">
@@ -16,6 +46,9 @@
                         <form action="{{ route('antrian.update', $antrian) }}" method="POST">
                             @csrf
                             @method('PUT')
+
+                            {{-- ✅ KIRIM BALIK URL agar setelah update redirect ke hasil pencarian --}}
+                            <input type="hidden" name="back" value="{{ $backUrl }}">
 
                             {{-- ================= DATA PASIEN ================= --}}
                             <div class="mb-3">
@@ -120,8 +153,7 @@
                                     @foreach ($poliOptions as $key => $label)
                                         <button
                                             type="button"
-                                            class="btn poli-btn
-                                                {{ $currentPoli === $key ? 'btn-primary active' : 'btn-outline-primary' }}"
+                                            class="btn poli-btn {{ $currentPoli === $key ? 'btn-primary active' : 'btn-outline-primary' }}"
                                             data-poli="{{ $key }}"
                                         >
                                             {{ $label }}
@@ -129,7 +161,6 @@
                                     @endforeach
                                 </div>
 
-                                {{-- hidden poli --}}
                                 <input type="hidden" name="poli" id="poliInput" value="{{ $currentPoli }}">
 
                                 @error('poli')
@@ -168,6 +199,8 @@
                                         @php
                                             $isActive  = $date->toDateString() === $currentDate;
                                             $isSunday  = $date->isSunday();
+
+                                            // catatan: ini masih pakai poli lama ($antrian->poli) sesuai kode kamu
                                             $antrianCount = \App\Models\Antrian::whereDate('tanggal_antrian', $date->toDateString())
                                                 ->where('poli', $antrian->poli)
                                                 ->count();
@@ -175,29 +208,18 @@
 
                                         <button
                                             type="button"
-                                            class="tanggal-card
-                                                {{ $isActive ? 'active' : '' }}
-                                                {{ $isSunday ? 'disabled' : '' }}"
+                                            class="tanggal-card {{ $isActive ? 'active' : '' }} {{ $isSunday ? 'disabled' : '' }}"
                                             data-date="{{ $date->toDateString() }}"
                                             @if($isSunday) disabled @endif
                                         >
-                                            <div class="hari">
-                                                {{ $date->translatedFormat('D') }}
-                                            </div>
-                                            <div class="tanggal">
-                                                {{ $date->format('d') }}
-                                            </div>
-                                            <div class="bulan">
-                                                {{ $date->translatedFormat('F Y') }}
-                                            </div>
-                                            <div class="jumlah">
-                                                Antrian: {{ $antrianCount }}
-                                            </div>
+                                            <div class="hari">{{ $date->translatedFormat('D') }}</div>
+                                            <div class="tanggal">{{ $date->format('d') }}</div>
+                                            <div class="bulan">{{ $date->translatedFormat('F Y') }}</div>
+                                            <div class="jumlah">Antrian: {{ $antrianCount }}</div>
                                         </button>
                                     @endforeach
                                 </div>
 
-                                {{-- hidden tanggal --}}
                                 <input
                                     type="hidden"
                                     name="tanggal_antrian"
@@ -211,10 +233,10 @@
                             </div>
 
                             <div class="d-flex justify-content-end mt-4 gap-2">
-                                <a href="{{ route('antrian.cari') }}" class="btn btn-secondary">
+                                <a href="{{ $backUrl }}" class="btn btn-outline-secondary rounded-pill px-4">
                                     Batal
                                 </a>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">
                                     Simpan Perubahan
                                 </button>
                             </div>

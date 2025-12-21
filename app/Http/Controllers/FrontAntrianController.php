@@ -14,15 +14,23 @@ class FrontAntrianController extends Controller
     /**
      * Guard: kalau antrian sudah dipanggil dokter,
      * pasien tidak boleh edit/hapus/status.
-     * Arahkan ke halaman diagnosa.
+     * Arahkan ke halaman diagnosa (rekam medik).
+     * ✅ tetap bawa parameter back (kalau ada) agar tombol kembali konsisten.
      */
-    private function blockIfCalled(Antrian $antrian, string $msg = null)
+    private function blockIfCalled(Antrian $antrian, string $msg = null, ?Request $request = null)
     {
         if ((int) $antrian->is_call === 1) {
+            $params = ['antrian' => $antrian->id];
+
+            // bawa back kalau ada (dari hasil cari / form / delete)
+            $back = $request?->query('back') ?? $request?->input('back') ?? null;
+            if ($back) $params['back'] = $back;
+
             return redirect()
-                ->route('antrian.rekam-medik', $antrian->id)
+                ->route('antrian.rekam-medik', $params)
                 ->with('error', $msg ?? 'Antrian sudah dipanggil dokter. Anda hanya bisa melihat diagnosa/rekam medik.');
         }
+
         return null;
     }
 
@@ -36,33 +44,26 @@ class FrontAntrianController extends Controller
         return redirect()->route('antrian.index');
     }
 
-    public function showCariAntrianForm()
+    /**
+     * ✅ GET /antrian/cari
+     * - kalau belum ada query no_ktp -> tampilkan form
+     * - kalau ada query no_ktp -> tampilkan hasil pencarian (tanpa harus POST)
+     */
+    public function showCariAntrianForm(Request $request)
     {
-        return view('antrian.cari-nik');
-    }
+        if (! $request->filled('no_ktp')) {
+            return view('antrian.cari-nik');
+        }
 
-    public function cariProses(Request $request)
-    {
-        return $this->searchByNik($request);
-    }
-
-    public function searchByNik(Request $request)
-    {
-        $request->validate([
-            'no_ktp' => 'required|string',
-        ], [
-            'no_ktp.required' => 'Silakan masukkan NIK Anda.',
-        ]);
-
-        $nik = $request->no_ktp;
+        $nik = (string) $request->no_ktp;
 
         $antrians = Antrian::where('no_ktp', $nik)
             ->orderByDesc('tanggal_antrian')
             ->get();
 
         if ($antrians->isEmpty()) {
-            return back()
-                ->withInput()
+            return redirect()
+                ->route('antrian.cari')
                 ->with('nik_not_found', 'NIK belum terdaftar / tidak valid.');
         }
 
@@ -72,16 +73,43 @@ class FrontAntrianController extends Controller
         ]);
     }
 
+    public function cariProses(Request $request)
+    {
+        return $this->searchByNik($request);
+    }
+
+    /**
+     * ✅ POST /antrian/cari
+     * FIX PENTING:
+     * Jangan return view langsung, tapi redirect ke GET /antrian/cari?no_ktp=...
+     * Biar tombol kembali/back bisa balik ke hasil pencarian yang valid.
+     */
+    public function searchByNik(Request $request)
+    {
+        $request->validate([
+            'no_ktp' => 'required|string',
+        ], [
+            'no_ktp.required' => 'Silakan masukkan NIK Anda.',
+        ]);
+
+        $nik = (string) $request->no_ktp;
+
+        return redirect()->route('antrian.cari', ['no_ktp' => $nik]);
+    }
+
     /**
      * ✅ Halaman Rekam Medik untuk PASIEN
      * hanya boleh kalau sudah dipanggil (is_call=1)
+     * ✅ kalau belum dipanggil -> redirect ke back kalau ada
      */
-    public function rekamMedik(Antrian $antrian)
+    public function rekamMedik(Request $request, Antrian $antrian)
     {
         if ((int) $antrian->is_call !== 1) {
-            return redirect()
-                ->route('antrian.cari')
-                ->with('error', 'Rekam medik belum tersedia. Pasien belum dipanggil.');
+            $back = $request->query('back');
+
+            return $back
+                ? redirect()->to($back)->with('error', 'Rekam medik belum tersedia. Pasien belum dipanggil.')
+                : redirect()->route('antrian.cari')->with('error', 'Rekam medik belum tersedia. Pasien belum dipanggil.');
         }
 
         $rekam = RekamMedik::where('antrian_id', $antrian->id)->first();
@@ -178,10 +206,11 @@ class FrontAntrianController extends Controller
 
     /**
      * ✅ Status: BLOK kalau sudah dipanggil (langsung ke diagnosa)
+     * ✅ bawa back param supaya tombol kembali konsisten.
      */
-    public function status(Antrian $antrian)
+    public function status(Request $request, Antrian $antrian)
     {
-        if ($resp = $this->blockIfCalled($antrian, 'Antrian sudah dipanggil. Silakan lihat diagnosa/rekam medik.')) {
+        if ($resp = $this->blockIfCalled($antrian, 'Antrian sudah dipanggil. Silakan lihat diagnosa/rekam medik.', $request)) {
             return $resp;
         }
 
@@ -225,9 +254,9 @@ class FrontAntrianController extends Controller
         ]);
     }
 
-    public function edit(Antrian $antrian)
+    public function edit(Request $request, Antrian $antrian)
     {
-        if ($resp = $this->blockIfCalled($antrian)) return $resp;
+        if ($resp = $this->blockIfCalled($antrian, null, $request)) return $resp;
 
         $poliOptions = [
             'umum'                 => 'Umum',
@@ -260,7 +289,7 @@ class FrontAntrianController extends Controller
 
     public function update(Request $request, Antrian $antrian)
     {
-        if ($resp = $this->blockIfCalled($antrian)) return $resp;
+        if ($resp = $this->blockIfCalled($antrian, null, $request)) return $resp;
 
         $data = $request->validate([
             'nama'            => 'required|string|max:255',
@@ -270,24 +299,28 @@ class FrontAntrianController extends Controller
             'pekerjaan'       => 'nullable|string|max:255',
             'poli'            => 'required|string',
             'tanggal_antrian' => 'required|date',
+            'back'            => 'nullable|string',
         ]);
 
-        $antrian->update($data);
+        // ✅ FIX: jangan ikut update field "back"
+        $antrian->update(collect($data)->except('back')->toArray());
 
-        return redirect()
-            ->route('antrian.cari')
-            ->with('success', 'Data antrian berhasil diperbarui.');
+        $back = $request->input('back');
+        return $back
+            ? redirect()->to($back)->with('success', 'Data antrian berhasil diperbarui.')
+            : redirect()->route('antrian.cari')->with('success', 'Data antrian berhasil diperbarui.');
     }
 
-    public function destroy(Antrian $antrian)
+    public function destroy(Request $request, Antrian $antrian)
     {
-        if ($resp = $this->blockIfCalled($antrian)) return $resp;
+        if ($resp = $this->blockIfCalled($antrian, null, $request)) return $resp;
 
         $antrian->delete();
 
-        return redirect()
-            ->route('antrian.cari')
-            ->with('success', 'Antrian berhasil dihapus.');
+        $back = $request->input('back');
+        return $back
+            ? redirect()->to($back)->with('success', 'Antrian berhasil dihapus.')
+            : redirect()->route('antrian.cari')->with('success', 'Antrian berhasil dihapus.');
     }
 
     protected function generateNoAntrian(string $poli): string

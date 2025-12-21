@@ -1,10 +1,12 @@
+<!-- resources/views/partials/navbar.blade.php -->
+
 <!-- ======= Top Bar ======= -->
 <div id="topbar" class="d-flex align-items-center fixed-top">
     <div class="container d-flex justify-content-center justify-content-md-between">
         <div class="contact-info d-flex align-items-center">
 
             <i class="bi bi-envelope"></i>
-            <a href="mailto:contact@example.com" class="contact-email">
+            <a href="mailto:puskesmaskaligandu@gmail.com" class="contact-email">
                 puskesmaskaligandu@gmail.com
             </a>
 
@@ -27,51 +29,66 @@
 
         <nav id="navbar" class="navbar order-last order-lg-0">
             <ul>
-                {{-- HOME --}}
                 <li>
-                    <a class="nav-link scrollto {{ request()->is('/') ? 'active' : '' }}"
-                       href="/#hero">
+                    <a class="nav-link scrollto {{ request()->is('/') ? 'active' : '' }}" href="/#hero">
                         <i class="bi bi-house-door me-1"></i> Home
                     </a>
                 </li>
 
-                {{-- ANTRIAN --}}
                 <li>
-                    <a class="nav-link scrollto {{ request()->is('antrian') ? 'active' : '' }}"
-                       href="{{ url('/antrian') }}">
+                    <a class="nav-link scrollto {{ request()->is('antrian') ? 'active' : '' }}" href="{{ url('/antrian') }}">
                         <i class="bi bi-journal-text me-1"></i> Antrian
                     </a>
                 </li>
 
-                {{-- ANTRIANKU --}}
                 <li>
-                    <a class="nav-link scrollto
-                       {{ request()->is('antrian/cari') || request()->is('antrian/cari/*') ? 'active' : '' }}"
+                    <a class="nav-link scrollto {{ request()->is('antrian/cari') || request()->is('antrian/cari/*') ? 'active' : '' }}"
                        href="{{ route('antrian.cari') }}">
                         <i class="bi bi-person-badge me-1"></i> Antrianku
                     </a>
                 </li>
 
-                {{-- CONTACT --}}
                 <li>
                     <a class="nav-link scrollto" href="/#contact">
                         <i class="bi bi-telephone me-1"></i> Contact
                     </a>
                 </li>
+
+                {{-- ✅ Tombol Masuk Staff (di dalam navbar, ikut mobile menu) --}}
+                @guest
+                    <li class="d-lg-none mt-2">
+                        <a class="nav-link scrollto" href="{{ route('staff.login') }}">
+                            <i class="bi bi-person-workspace me-1"></i> Masuk Staff
+                        </a>
+                    </li>
+                @endguest
             </ul>
 
             <i class="bi bi-list mobile-nav-toggle"></i>
-        </nav><!-- .navbar -->
+        </nav>
 
-        {{-- Dark/Light Toggle Button --}}
-        <button id="themeToggle" type="button"
-                class="btn btn-outline-secondary ms-3 d-flex align-items-center gap-1"
-                style="border-radius: 20px; font-size: 14px;">
-            <i id="themeIcon" class="bi bi-moon-stars"></i>
-            <span id="themeText">Gelap</span>
+        {{-- ✅ Tombol Masuk Staff (di kanan navbar, desktop) --}}
+        @guest
+            <a href="{{ route('staff.login') }}"
+               class="btn btn-sm btn-primary rounded-pill ms-3 ms-lg-3 d-none d-lg-inline-flex align-items-center gap-1"
+               style="white-space:nowrap;">
+                <i class="bi bi-person-workspace"></i>
+                <span>Masuk Staff</span>
+            </a>
+        @endguest
+
+        {{-- ✅ Dark/Light Toggle Button (posisi rapih kanan) --}}
+        <button
+            type="button"
+            id="darkModeToggle"
+            class="btn btn-sm btn-outline-secondary rounded-pill ms-3 ms-lg-3"
+            style="white-space:nowrap;"
+        >
+            <i class="bi bi-moon-stars me-1"></i>
+            <span class="dm-text">Gelap</span>
         </button>
 
-        {{-- DROPDOWN ADMIN HANYA MUNCUL DI HALAMAN ADMIN --}}
+        {{-- Dropdown Admin --}}
         @if (request()->is('admin*'))
             @auth
                 @if (auth()->user()->role_id == 1)
@@ -104,27 +121,4 @@
         @endif
 
     </div>
-</header><!-- End Header -->
-
-{{-- ================== CUSTOM DARK MODE STYLE ================== --}}
-<style>
-    /* Topbar email & phone saat DARK MODE */
-    .dark-mode #topbar .contact-info a,
-    .dark-mode #topbar .contact-info i {
-        color: #6bb6ff !important; /* biru muda supaya jelas */
-    }
-
-    /* Header tabel di halaman antrian saat DARK MODE */
-    .dark-mode table thead th {
-        background: rgba(90, 150, 255, 0.18); /* biru muda transparan */
-        color: #7DB7FF;                        /* teks biru muda */
-        font-weight: 600;
-        border-color: rgba(125, 183, 255, 0.35);
-    }
-
-    /* Isi baris tabel saat DARK MODE */
-    .dark-mode table tbody td {
-        color: #e5e5e5; /* putih lembut */
-        border-color: rgba(255, 255, 255, 0.12);
-    }
-</style>
+</header>

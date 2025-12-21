@@ -1,0 +1,529 @@
+/* =========================================================
+   PK DARK MODE (Global)
+   - apply when body has class: .dark-mode
+   ========================================================= */
+
+body.dark-mode{
+  background:#020617 !important;
+  color:#e5e7eb !important;
+}
+
+/* teks umum */
+body.dark-mode p,
+body.dark-mode small,
+body.dark-mode span{
+  color:#cbd5e1;
+}
+
+/* ===== TOPBAR ===== */
+body.dark-mode #topbar{
+  background:#0b1220 !important;
+  border-bottom:1px solid rgba(148,163,184,.12);
+}
+body.dark-mode #topbar .contact-info a,
+body.dark-mode #topbar .contact-info i{
+  color:#6bb6ff !important;
+}
+
+/* ===== HEADER/NAVBAR ===== */
+body.dark-mode #header{
+  background:#0b1220 !important;
+  border-bottom:1px solid rgba(148,163,184,.12);
+}
+body.dark-mode #header .logo a{
+  color:#e5e7eb !important;
+}
+body.dark-mode #navbar a{
+  color:#cbd5e1 !important;
+}
+body.dark-mode #navbar a.active,
+body.dark-mode #navbar a:hover{
+  color:#6bb6ff !important;
+}
+
+/* tombol toggle darkmode biar gak “ketarik” & rapi */
+#darkModeToggle{
+  margin-left: 14px;
+  white-space: nowrap;
+}
+body.dark-mode #darkModeToggle{
+  border-color: rgba(107,182,255,.45) !important;
+  color:#bfe0ff !important;
+}
+body.dark-mode #darkModeToggle:hover{
+  background: rgba(107,182,255,.12) !important;
+}
+
+/* ===== HERO (background image jangan hilang) =====
+   Kalau hero kamu pakai background-image dari template,
+   kita biarkan tampil, tapi gelapkan via overlay.
+*/
+body.dark-mode #hero{
+  position: relative;
+}
+body.dark-mode #hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(
+    to right,
+    rgba(2,6,23,.88) 0%,
+    rgba(2,6,23,.72) 45%,
+    rgba(2,6,23,.18) 100%
+  );
+  z-index:0;
+}
+body.dark-mode #hero .container{
+  position:relative;
+  z-index:1;
+}
+
+/* teks hero */
+body.dark-mode #hero .pk-hero-title,
+body.dark-mode #hero .hero-title{
+  color:#f9fafb !important;
+}
+body.dark-mode #hero .pk-hero-subtitle,
+body.dark-mode #hero .hero-subtitle{
+  color:#cbd5e1 !important;
+}
+
+/* tombol hero */
+body.dark-mode #hero .pk-btn-primary{
+  background:#4da3ff !important;
+  border-color:#4da3ff !important;
+  box-shadow:0 10px 32px rgba(77,163,255,.35) !important;
+}
+body.dark-mode #hero .pk-btn-ghost{
+  border-color: rgba(255,255,255,.40) !important;
+  color:#e5e7eb !important;
+  background: rgba(255,255,255,.08) !important;
+}
+
+/* stats hero */
+body.dark-mode .pk-hero-stat{
+  background: rgba(15,23,42,.70) !important;
+  border-color: rgba(148,163,184,.18) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.55) !important;
+}
+body.dark-mode .pk-hero-stat-number{
+  color:#6bb6ff !important;
+}
+body.dark-mode .pk-hero-stat-label{
+  color:#cbd5e1 !important;
+}
+
+/* ===== SECTIONS umum ===== */
+body.dark-mode section{
+  background: transparent;
+}
+
+/* ===== CONTACT ===== */
+body.dark-mode .contact,
+body.dark-mode .contact .info{
+  color:#e5e7eb !important;
+}
+body.dark-mode .contact .info h4,
+body.dark-mode .contact .info p{
+  color:#e5e7eb !important;
+}
+body.dark-mode .contact .info .icon{
+  background: rgba(255,255,255,.08) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+}
+
+/* ===== FORMS ===== */
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode textarea.form-control{
+  background: rgba(15,23,42,.75) !important;
+  color:#e5e7eb !important;
+  border:1px solid rgba(107,182,255,.35) !important;
+}
+body.dark-mode .form-control::placeholder,
+body.dark-mode textarea.form-control::placeholder{
+  color:#9ca3af !important;
+}
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus,
+body.dark-mode textarea.form-control:focus{
+  background: rgba(2,6,23,.85) !important;
+  border-color:#6bb6ff !important;
+  box-shadow: 0 0 0 2px rgba(107,182,255,.28) !important;
+}
+
+/* =========================================================
+   DARK MODE - ANTRIAN (tabel, card, modal)
+   ========================================================= */
+
+/* card/container antrian (kalau ada .card bootstrap) */
+body.dark-mode .card,
+body.dark-mode .shadow,
+body.dark-mode .shadow-sm{
+  background: rgba(15,23,42,.75) !important;
+  border:1px solid rgba(148,163,184,.16) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.55) !important;
+  color:#e5e7eb !important;
+}
+
+/* tabel */
+body.dark-mode table{
+  color:#e5e7eb !important;
+}
+body.dark-mode table thead th{
+  background: rgba(77,163,255,.14) !important;
+  color:#bfe0ff !important;
+  font-weight:700;
+  border-color: rgba(107,182,255,.22) !important;
+}
+body.dark-mode table tbody td{
+  border-color: rgba(148,163,184,.12) !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode table tbody tr:hover{
+  background: rgba(77,163,255,.06) !important;
+}
+
+/* badge/pill kecil (kalau ada) */
+body.dark-mode .badge,
+body.dark-mode .pill,
+body.dark-mode .tag{
+  background: rgba(77,163,255,.14) !important;
+  color:#bfe0ff !important;
+  border:1px solid rgba(107,182,255,.22) !important;
+}
+
+/* filter select / search bar antrian */
+body.dark-mode .form-select,
+body.dark-mode .form-control{
+  background: rgba(2,6,23,.68) !important;
+}
+
+/* =========================================================
+   MODAL (pilih poli, pilih tanggal, form pasien)
+   ========================================================= */
+
+/* backdrop modal */
+body.dark-mode .modal-backdrop.show{
+  opacity: .70 !important;
+}
+
+/* content modal */
+body.dark-mode .modal-content{
+  background: rgba(15,23,42,.92) !important;
+  color:#e5e7eb !important;
+  border:1px solid rgba(148,163,184,.18) !important;
+  border-radius:16px !important;
+  box-shadow:0 28px 70px rgba(0,0,0,.70) !important;
+}
+
+/* header / close */
+body.dark-mode .modal-header{
+  border-bottom:1px solid rgba(148,163,184,.14) !important;
+}
+body.dark-mode .modal-header .btn-close{
+  filter: invert(1) grayscale(1);
+  opacity:.85;
+}
+
+/* footer */
+body.dark-mode .modal-footer{
+  border-top:1px solid rgba(148,163,184,.14) !important;
+}
+
+/* tombol modal */
+body.dark-mode .modal .btn{
+  border-radius: 12px;
+}
+body.dark-mode .modal .btn-secondary{
+  background: rgba(148,163,184,.18) !important;
+  border-color: rgba(148,163,184,.18) !important;
+  color:#e5e7eb !important;
+}
+body.dark-mode .modal .btn-primary{
+  background:#4da3ff !important;
+  border-color:#4da3ff !important;
+  color:#081427 !important;
+  font-weight:700;
+}
+
+/* =========================================================
+   KOMPONEN TILE (Poli & Tanggal) - DARK MODE
+   (menangkap class umum yg kamu pakai sebelumnya)
+   ========================================================= */
+
+body.dark-mode .date-tile,
+body.dark-mode .tanggal-card,
+body.dark-mode .pilih-tanggal .card,
+body.dark-mode .poli-card,
+body.dark-mode .poli-tile{
+  background: rgba(2,6,23,.60) !important;
+  border: 1px solid rgba(107,182,255,.18) !important;
+  color:#e5e7eb !important;
+}
+
+body.dark-mode .date-tile *,
+body.dark-mode .tanggal-card *,
+body.dark-mode .pilih-tanggal .card *,
+body.dark-mode .poli-card *,
+body.dark-mode .poli-tile *{
+  color:#e5e7eb !important;
+}
+
+/* hover */
+body.dark-mode .date-tile:hover,
+body.dark-mode .tanggal-card:hover,
+body.dark-mode .pilih-tanggal .card:hover,
+body.dark-mode .poli-card:hover,
+body.dark-mode .poli-tile:hover{
+  background: rgba(77,163,255,.16) !important;
+  border-color: rgba(107,182,255,.32) !important;
+}
+
+/* active/selected */
+body.dark-mode .date-tile.active,
+body.dark-mode .tanggal-card.active,
+body.dark-mode .pilih-tanggal .card.active{
+  background: rgba(77,163,255,.22) !important;
+  border-color: rgba(107,182,255,.45) !important;
+}
+
+/* =========================================================
+   BACK TO TOP
+   ========================================================= */
+body.dark-mode .back-to-top{
+  background:#4da3ff !important;
+  color:#081427 !important;
+}
+
+/* ==========================================================
+   DARK MODE FIX - STATUS ANTRIAN (/antrian/status/*)
+   Target: body.dark-mode atau html.dark-mode (sesuaikan punyamu)
+   ========================================================== */
+
+/* ganti selector dark-mode sesuai yang kamu pakai */
+body.dark-mode .pk-status-page{
+  color: rgba(255,255,255,.88);
+}
+
+/* Card utama */
+body.dark-mode .pk-status-page .card,
+body.dark-mode .pk-status-page .status-card,
+body.dark-mode .pk-status-page .status-wrapper{
+  background: rgba(12, 18, 34, 0.78) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 20px 55px rgba(0,0,0,.45) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Judul & deskripsi (ini yang di screenshot jadi gelap) */
+body.dark-mode .pk-status-page h1,
+body.dark-mode .pk-status-page h2,
+body.dark-mode .pk-status-page h3,
+body.dark-mode .pk-status-page h4,
+body.dark-mode .pk-status-page .title,
+body.dark-mode .pk-status-page .card-title{
+  color: #fff !important;
+}
+
+body.dark-mode .pk-status-page p,
+body.dark-mode .pk-status-page .text-muted,
+body.dark-mode .pk-status-page small{
+  color: rgba(255,255,255,.70) !important;
+}
+
+/* Panel putih (POLI, ESTIMASI, ORANG DEPAN) -> jadi dark */
+body.dark-mode .pk-status-page .bg-white,
+body.dark-mode .pk-status-page .stat-box,
+body.dark-mode .pk-status-page .info-box,
+body.dark-mode .pk-status-page .card .row .col .p-3{
+  background: rgba(2, 10, 26, .55) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.88) !important;
+}
+
+/* Label kecil (misal "POLI", "ESTIMASI") */
+body.dark-mode .pk-status-page .label,
+body.dark-mode .pk-status-page .stat-label{
+  color: rgba(255,255,255,.55) !important;
+}
+
+/* Box status hijau muda -> dibuat gelap tapi tetap "success" */
+body.dark-mode .pk-status-page .status-success,
+body.dark-mode .pk-status-page .alert-success{
+  background: rgba(25, 135, 84, .18) !important;
+  border: 1px solid rgba(25,135,84,.35) !important;
+  color: rgba(255,255,255,.90) !important;
+}
+
+/* Info biru (tips) */
+body.dark-mode .pk-status-page .alert-info,
+body.dark-mode .pk-status-page .status-info{
+  background: rgba(13, 110, 253, .14) !important;
+  border: 1px solid rgba(13,110,253,.30) !important;
+  color: rgba(255,255,255,.88) !important;
+}
+
+/* Input / form (kalau ada) */
+body.dark-mode .pk-status-page input,
+body.dark-mode .pk-status-page select,
+body.dark-mode .pk-status-page textarea{
+  background: rgba(2, 10, 26, .55) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  color: #fff !important;
+}
+
+body.dark-mode .pk-status-page input::placeholder{
+  color: rgba(255,255,255,.45) !important;
+}
+
+/* Tombol utama */
+body.dark-mode .pk-status-page .btn-primary{
+  box-shadow: 0 14px 35px rgba(13,110,253,.28) !important;
+}
+
+/* Pastikan header/topbar selalu paling atas & bisa diklik */
+#topbar { z-index: 3000 !important; }
+#header { z-index: 2999 !important; }
+
+/* Kalau ada overlay background, jangan makan klik */
+.pk-queue-status,
+.pk-queue-status::before,
+.pk-queue-status::after {
+  pointer-events: none;
+}
+
+/* Tapi konten di dalamnya tetap bisa diklik */
+.pk-queue-status .container,
+.pk-queue-status .container * {
+  pointer-events: auto;
+}
+
+/* =========================
+   ANTRIANKU PAGE (Cari NIK)
+   ========================= */
+
+/* Light default */
+.pk-antrianku{
+  background: #ffffff;
+  min-height: calc(100vh - 170px);
+  padding-top: 140px; /* aman dari navbar fixed */
+  padding-bottom: 60px;
+}
+
+.pk-antrianku__title{
+  font-weight: 900;
+  letter-spacing: 1px;
+  font-size: 44px;
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+.pk-antrianku__subtitle{
+  color: #64748b;
+  margin: 0 auto 14px;
+  max-width: 820px;
+}
+
+.pk-antrianku__cta{
+  box-shadow: 0 12px 30px rgba(13,110,253,.18);
+}
+
+.pk-antrianku__card{
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 18px;
+  box-shadow: 0 20px 55px rgba(15,23,42,.08);
+  max-width: 980px;
+  margin: 0 auto;
+}
+.pk-antrianku__cardBody{
+  padding: 28px;
+}
+.pk-antrianku__icon{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(13,110,253,.12);
+  color: #0d6efd;
+  flex: 0 0 auto;
+}
+.pk-antrianku__cardTitle{
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 18px;
+}
+.pk-antrianku__cardSub{
+  color: #64748b;
+  font-size: 13px;
+}
+
+.pk-antrianku__label{
+  color: #64748b;
+}
+.pk-antrianku__input{
+  border-radius: 14px;
+}
+
+/* =========================
+   Dark mode override
+   (sesuaikan selector class dark mode kamu)
+   ========================= */
+
+/* kalau dark-mode.js pakai class pk-dark di body */
+body.pk-dark .pk-antrianku,
+/* jaga-jaga kalau pakai class dark-mode */
+body.dark-mode .pk-antrianku{
+  background: radial-gradient(1200px 600px at 50% -10%, rgba(59,130,246,.18), transparent 60%),
+              linear-gradient(180deg, #050b18, #030818);
+}
+
+body.pk-dark .pk-antrianku__title,
+body.dark-mode .pk-antrianku__title{
+  color: #ffffff;
+}
+body.pk-dark .pk-antrianku__subtitle,
+body.dark-mode .pk-antrianku__subtitle{
+  color: rgba(255,255,255,.65);
+}
+
+body.pk-dark .pk-antrianku__card,
+body.dark-mode .pk-antrianku__card{
+  background: rgba(10, 18, 36, 0.72);
+  border-color: rgba(255,255,255,.12);
+  box-shadow: 0 20px 55px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+}
+
+body.pk-dark .pk-antrianku__cardTitle,
+body.dark-mode .pk-antrianku__cardTitle{
+  color: #fff;
+}
+body.pk-dark .pk-antrianku__cardSub,
+body.dark-mode .pk-antrianku__cardSub{
+  color: rgba(255,255,255,.6);
+}
+
+body.pk-dark .pk-antrianku__label,
+body.dark-mode .pk-antrianku__label{
+  color: rgba(255,255,255,.6);
+}
+
+body.pk-dark .pk-antrianku__input,
+body.dark-mode .pk-antrianku__input{
+  background: rgba(2, 10, 26, .65);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+}
+
+body.pk-dark .pk-antrianku__input::placeholder,
+body.dark-mode .pk-antrianku__input::placeholder{
+  color: rgba(255,255,255,.45);
+}
+
+@media (max-width: 576px){
+  .pk-antrianku__cardBody{ padding: 18px; }
+  .pk-antrianku__title{ font-size: 36px; }
+}

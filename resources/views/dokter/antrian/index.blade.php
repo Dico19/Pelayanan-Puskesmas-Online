@@ -10,6 +10,9 @@
   $hariIniLabel = Carbon::parse($todayStr)->translatedFormat('d M Y');
   $poliLabel = $poli ?? '-';
 
+  // ✅ aturan minimal skip sebelum bisa "Tidak Hadir"
+  $MIN_SKIP_FOR_ABSENT = 2;
+
   $normStatus = function ($r) {
     $s = strtolower(trim((string)($r->status ?? '')));
     if ($s === '') {
@@ -61,6 +64,7 @@
   .badge-wait{ background: rgba(255,193,7,.22); color:#b58100; }
   .badge-done{ background: rgba(25,135,84,.14); color:#198754; }
   .badge-skip{ background: rgba(220,53,69,.12); color:#dc3545; }
+  .badge-absent{ background: rgba(111,66,193,.14); color:#6f42c1; } /* ✅ tidak hadir */
 
   .btn-pill{ border-radius:999px; padding:8px 14px; font-weight:900; }
   .btn-sm.btn-pill{ padding:7px 12px; }
@@ -142,6 +146,8 @@
                 <span class="badge-soft badge-done">Selesai</span>
               @elseif($activeStatus === 'dilayani')
                 <span class="badge-soft badge-called">Sedang dilayani</span>
+              @elseif($activeStatus === 'tidak_hadir')
+                <span class="badge-soft badge-absent">Tidak hadir</span>
               @elseif($activeStatus === 'dilewati')
                 <span class="badge-soft badge-skip">Dilewati</span>
               @else
@@ -232,8 +238,12 @@
           $isToday = ($rowDate === $todayStr);
 
           $status = $normStatus($row);
-          $isCalled  = in_array($status, ['dipanggil','dilayani','selesai','dilewati'], true) || ((int)($row->is_call ?? 0) === 1);
+
+          $skipCount = (int) ($row->skip_count ?? 0);
+
+          $isCalled  = in_array($status, ['dipanggil','dilayani','selesai','dilewati','tidak_hadir'], true) || ((int)($row->is_call ?? 0) === 1);
           $isSkipped = ($status === 'dilewati');
+          $isAbsent  = ($status === 'tidak_hadir');
           $isDone    = ($status === 'selesai');
           $isServing = ($status === 'dilayani');
 
@@ -241,6 +251,9 @@
           $collapseId = 'diag-'.$row->id;
 
           $highlight = $active && (int)$active->id === (int)$row->id ? 'row-focus' : '';
+
+          // ✅ Tombol Tidak Hadir: hanya kalau sudah dilewati & skip_count >= minimal
+          $canAbsent = $isToday && $isSkipped && !$isDone && ($skipCount >= $MIN_SKIP_FOR_ABSENT);
         @endphp
 
         <tr class="{{ $highlight }}">
@@ -260,8 +273,15 @@
           <td>
             @if($isDone)
               <span class="badge-soft badge-done">Selesai</span>
+            @elseif($isAbsent)
+              <span class="badge-soft badge-absent">Tidak hadir</span>
             @elseif($isSkipped)
-              <span class="badge-soft badge-skip">Dilewati</span>
+              <span class="badge-soft badge-skip">
+                Dilewati
+                @if($skipCount > 0)
+                  • {{ $skipCount }}x
+                @endif
+              </span>
             @elseif($isServing)
               <span class="badge-soft badge-called">Sedang dilayani</span>
             @elseif($status === 'dipanggil')
@@ -336,7 +356,7 @@
               @endif
 
               {{-- LEWATKAN --}}
-              @if($isToday && in_array($status, ['menunggu','dipanggil','dilayani'], true) && !$isDone)
+              @if($isToday && in_array($status, ['menunggu','dipanggil','dilayani','dilewati'], true) && !$isDone && $status !== 'tidak_hadir')
                 <form action="{{ route('dokter.antrian.lewati', $row->id) }}" method="POST" class="d-inline"
                       onsubmit="return confirm('Lewatkan antrian {{ $row->no_antrian }} - {{ $row->nama }} ?')">
                   @csrf
@@ -351,6 +371,22 @@
                 </button>
               @endif
 
+              {{-- ✅ TIDAK HADIR --}}
+              @if($canAbsent)
+                <form action="{{ route('dokter.antrian.tidakHadir', $row->id) }}" method="POST" class="d-inline"
+                      onsubmit="return confirm('Tandai TIDAK HADIR untuk {{ $row->no_antrian }} - {{ $row->nama }} ?')">
+                  @csrf
+                  <button type="submit" class="btn btn-outline-dark btn-pill btn-sm">
+                    <i class="bi bi-person-x-fill me-1"></i> Tidak hadir
+                  </button>
+                </form>
+              @else
+                <button class="btn btn-outline-dark btn-pill btn-sm btn-disabled" disabled
+                        title="Muncul setelah dilewati minimal {{ $MIN_SKIP_FOR_ABSENT }}x">
+                  <i class="bi bi-person-x-fill me-1"></i> Tidak hadir
+                </button>
+              @endif
+
               {{-- ✅ RIWAYAT (MODAL - klik sekali) --}}
               <button type="button"
                       class="btn btn-outline-secondary btn-pill btn-sm js-riwayat"
@@ -361,7 +397,7 @@
               </button>
 
               {{-- DIAGNOSA --}}
-              @if($isToday && $isCalled && !$isSkipped)
+              @if($isToday && $isCalled && !$isSkipped && !$isAbsent)
                 <button class="btn btn-dark btn-pill btn-sm"
                         type="button"
                         data-bs-toggle="collapse"
@@ -372,7 +408,7 @@
                 </button>
               @else
                 <button class="btn btn-dark btn-pill btn-sm btn-disabled" disabled
-                        title="Diagnosa aktif setelah pasien dipanggil (hari ini)">
+                        title="Diagnosa aktif setelah pasien dipanggil (hari ini). Tidak aktif jika dilewati/tidak hadir.">
                   <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosa
                 </button>
               @endif
@@ -476,7 +512,7 @@
       return `<div class="text-muted">Belum ada riwayat kunjungan (atau belum ada diagnosa tersimpan).</div>`;
     }
 
-    return items.map((it, idx) => {
+    return items.map((it) => {
       const tanggal = escapeHtml(it.tanggal);
       const poli = escapeHtml(it.poli ?? '-');
       const diagnosa = escapeHtml(it.diagnosa ?? '-');
@@ -526,7 +562,6 @@
       </div>
     `;
 
-    // Pastikan bootstrap modal ada
     if (!window.bootstrap) {
       bodyEl.innerHTML = `<div class="text-danger">Bootstrap JS belum aktif. Pastikan bootstrap.bundle.min.js ter-load.</div>`;
       return;

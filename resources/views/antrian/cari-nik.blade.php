@@ -1,34 +1,37 @@
 @extends('layouts.main')
-@include('partials.navbar')
+
+@section('title', 'Antrianku')
 
 @section('content')
-<section id="antrian" class="py-5" style="margin-top: 90px;">
+<section id="antrian" class="pk-antrianku">
     <div class="container">
 
         {{-- JUDUL HALAMAN --}}
-        <h2 class="text-center fw-bold mb-2 text-uppercase">
-            ANTRIANKU
-        </h2>
-        <p class="text-center text-muted mb-4">
-            Cek, ubah, atau hapus antrian Anda dengan memasukkan NIK (No KTP) 
-            yang digunakan saat pendaftaran.
-        </p>
+        <div class="text-center mb-4">
+            <h2 class="pk-antrianku__title text-uppercase">
+                ANTRIANKU
+            </h2>
+            <p class="pk-antrianku__subtitle">
+                Cek, ubah, atau hapus antrian Anda dengan memasukkan NIK (No KTP)
+                yang digunakan saat pendaftaran.
+            </p>
 
-        {{-- TOMBOL AMBIL ANTRIAN BARU (DI TENGAH) --}}
-        <div class="d-flex justify-content-center mb-4">
-            <a href="{{ url('/antrian') }}"
-               class="btn btn-primary d-inline-flex align-items-center px-4 py-2"
-               style="font-size: 15px; border-radius: 999px;">
-                <i class="bi bi-clipboard-plus me-2"></i>
-                Ambil Antrian Baru
-            </a>
+            {{-- TOMBOL AMBIL ANTRIAN BARU --}}
+            <div class="d-flex justify-content-center">
+                <a href="{{ url('/antrian') }}"
+                   class="btn btn-primary d-inline-flex align-items-center px-4 py-2 rounded-pill pk-antrianku__cta">
+                    <i class="bi bi-clipboard-plus me-2"></i>
+                    Ambil Antrian Baru
+                </a>
+            </div>
         </div>
 
         {{-- CARD FORM CARI NIK --}}
         <div class="row justify-content-center">
             <div class="col-lg-8 col-xl-7">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body p-4 p-md-5">
+
+                <div class="pk-antrianku__card">
+                    <div class="pk-antrianku__cardBody">
 
                         {{-- ALERT JIKA NIK TIDAK DITEMUKAN --}}
                         @if (session('nik_not_found'))
@@ -38,16 +41,15 @@
                         @endif
 
                         {{-- HEADER KECIL DI DALAM CARD --}}
-                        <div class="d-flex align-items-center mb-4">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
-                                 style="width: 46px; height: 46px; background: rgba(13,110,253,0.12);">
-                                <i class="bi bi-search text-primary fs-5"></i>
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <div class="pk-antrianku__icon">
+                                <i class="bi bi-search"></i>
                             </div>
                             <div>
-                                <h5 class="mb-0 fw-semibold">Cari Antrian Anda</h5>
-                                <small class="text-muted">
+                                <div class="pk-antrianku__cardTitle">Cari Antrian Anda</div>
+                                <div class="pk-antrianku__cardSub">
                                     Masukkan NIK (No KTP) yang digunakan saat mengambil nomor antrian.
-                                </small>
+                                </div>
                             </div>
                         </div>
 
@@ -56,15 +58,19 @@
                             @csrf
 
                             <div class="mb-3">
-                                <label for="no_ktp" class="form-label fw-semibold">NIK (No KTP)</label>
+                                <label for="no_ktp" class="form-label pk-antrianku__label fw-semibold">
+                                    NIK (No KTP)
+                                </label>
+
                                 <input
                                     type="text"
                                     name="no_ktp"
                                     id="no_ktp"
-                                    class="form-control @error('no_ktp') is-invalid @enderror"
+                                    class="form-control form-control-lg pk-antrianku__input @error('no_ktp') is-invalid @enderror"
                                     placeholder="3273xxxxxxxxxxxx"
                                     value="{{ old('no_ktp') }}"
                                 >
+
                                 @error('no_ktp')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -72,8 +78,7 @@
 
                             <div class="d-flex justify-content-end mt-3">
                                 <button type="submit"
-                                        class="btn btn-primary px-4 d-inline-flex align-items-center"
-                                        style="border-radius: 999px;">
+                                        class="btn btn-primary px-4 py-2 d-inline-flex align-items-center rounded-pill pk-antrianku__btn">
                                     <i class="bi bi-search me-2"></i>
                                     Cari Antrian
                                 </button>
@@ -82,6 +87,7 @@
 
                     </div>
                 </div>
+
             </div>
         </div>
 

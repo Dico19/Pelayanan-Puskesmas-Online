@@ -1,5 +1,5 @@
-<section id="antrian" class="d-flex align-items-center">
-    <div class="container" style="margin-top: 150px">
+<section id="antrian" class="antrian-wrap">
+    <div class="container" style="margin-top: 110px">
 
         @if (session()->has('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -8,82 +8,33 @@
             </div>
         @endif
 
-        @if ($cekAntrian > 0)
-            <div class="card">
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="table-barang">
-                        <thead>
-                            <tr style="text-align: center">
-                                <th scope="col">No Antrian</th>
-                                <th scope="col">Nama</th>
-                                <th scope="col">Alamat</th>
-                                <th scope="col">Jenis Kelamin</th>
-                                <th scope="col">Nomor HP</th>
-                                <th scope="col">Nomor KTP</th>
-                                <th scope="col">Tgl. Lahir</th>
-                                <th scope="col">Pekerjaan</th>
-                                <th scope="col">Poli</th>
-                                <th scope="col">Tgl Antrian</th>
-                                <th scope="col">Opsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($detailAntrian as $item)
-                                <tr style="text-align: center">
-                                    <td>{{ $item->no_antrian }}</td>
-                                    <td>{{ $item->nama }}</td>
-                                    <td>{{ $item->alamat }}</td>
-                                    <td>{{ $item->jenis_kelamin }}</td>
-                                    <td>{{ $item->no_hp }}</td>
-                                    <td>{{ $item->no_ktp }}</td>
-                                    <td>{{ $item->tgl_lahir }}</td>
-                                    <td>{{ $item->pekerjaan }}</td>
-                                    <td>{{ $item->poli }}</td>
-                                    <td>{{ $item->tanggal_antrian }}</td>
-                                    <td>
-                                        <a class="btn btn-success" href="{{ route('cetakAntrian') }}" target="_blank">
-                                            <i class="bi bi-printer"></i>
-                                        </a>
-
-                                        {{-- TOMBOL ESTIMASI WAKTU TUNGGU --}}
-                                        <a href="{{ route('antrian.status', $item->id) }}"
-                                           class="btn btn-primary mt-1">
-                                            <i class="bi bi-clock-history"></i> Estimasi Tunggu
-                                        </a>
-
-                                        <a class="btn btn-warning" wire:click="editAntrian({{ $item->id }})"
-                                           role="button" data-bs-toggle="modal" data-bs-target="#editAntrian">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-
-                                        <button type="button" class="btn btn-danger"
-                                                wire:click="deleteAntrian({{ $item->id }})" role="button"
-                                                data-bs-toggle="modal" data-bs-target="#deleteAntrian">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+        {{-- HERO / HEADER --}}
+        <div class="antrian-hero">
+            <div>
+                <h3 class="antrian-title mb-1">Ambil Antrian</h3>
+                <div class="antrian-sub">Pilih poli, pilih tanggal, lalu isi data pasien.</div>
             </div>
-        @else
-            {{-- Jangan Tampilkan Apa-apa --}}
-        @endif
 
-        @include('livewire.antrian.editAntrian')
-        @include('livewire.antrian.createAntrian')
+            <button type="button"
+                    class="btn antrian-cta"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createAntrian"
+                    wire:click="openCreate">
+                <i class="bi bi-file-plus me-2"></i> Ambil Antrian Disini
+            </button>
+        </div>
 
-        <!-- Button Modal (publik, tanpa login) -->
-        <button type="button" class="btn btn-primary my-3" data-bs-toggle="modal" data-bs-target="#createAntrian">
-            <i class="bi bi-file-plus me-1"></i>Ambil Antrian Disini
-        </button>
+        {{-- MAIN CARD --}}
+        <div class="antrian-card">
 
-        <div class="row">
-            <div class="col-md-3">
-                <div class="mb-3">
-                    <select class="form-select" wire:model="poli">
+            {{-- TOP BAR (title + filter) --}}
+            <div class="antrian-card__top">
+                <div class="label">
+                    <i class="bi bi-list-check me-2"></i> Daftar Antrian
+                </div>
+
+                <div class="antrian-filter">
+                    <select class="form-select" wire:model="filterPoli">
                         <option value="">Sortir Berdasarkan Poli</option>
                         <option value="umum">Poli Umum</option>
                         <option value="gigi">Poli Gigi</option>
@@ -95,50 +46,85 @@
                     </select>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col">
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="table_id">
+            {{-- TABLE --}}
+            <div class="antrian-table-wrap">
+                <div class="table-responsive antrian-scroll">
+                    <table class="table antrian-table mb-0" id="table_id">
                         <thead>
-                            <tr style="text-align: center">
-                                <th scope="col">No</th>
-                                <th scope="col">No Antrian</th>
-                                <th scope="col">Nama</th>
-                                <th scope="col">Alamat</th>
-                                <th scope="col">Jenis Kelamin</th>
-                                <th scope="col">Nomor HP</th>
-                                <th scope="col">Nomor KTP</th>
-                                <th scope="col">Tgl. Lahir</th>
-                                <th scope="col">Pekerjaan</th>
-                                <th scope="col">Poli</th>
-                                <th scope="col">Tgl. Antrian</th>
+                            <tr class="text-center">
+                                <th>No</th>
+                                <th>No Antrian</th>
+                                <th>Nama</th>
+                                <th>Alamat</th>
+                                <th>Jenis Kelamin</th>
+                                <th>Nomor HP</th>
+                                <th>Nomor KTP</th>
+                                <th>Tgl Lahir</th>
+                                <th>Pekerjaan</th>
+                                <th>Poli</th>
+                                <th>Tgl Antrian</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            @foreach ($antrian as $item)
-                                <tr style="text-align: center">
+                            @forelse ($antrian as $item)
+                                <tr class="text-center">
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $item->no_antrian }}</td>
-                                    <td>{{ $item->nama }}</td>
-                                    <td>{{ $item->alamat }}</td>
+
+                                    <td>
+                                        <span class="badge-poli">
+                                            <i class="bi bi-hash"></i> {{ $item->no_antrian }}
+                                        </span>
+                                    </td>
+
+                                    <td class="text-start">{{ $item->nama }}</td>
+                                    <td class="text-start">{{ $item->alamat }}</td>
+
                                     <td>{{ $item->jenis_kelamin }}</td>
+
                                     <td>{{ $item->no_hp }}</td>
+
                                     <td>{{ substr_replace($item->no_ktp, '******', 4, 6) }}</td>
+
                                     <td>{{ $item->tgl_lahir }}</td>
+
                                     <td>{{ $item->pekerjaan }}</td>
-                                    <td>{{ $item->poli }}</td>
-                                    <td>{{ $item->tanggal_antrian }}</td>
+
+                                    <td>
+                                        <span class="badge-poli">
+                                            <i class="bi bi-hospital"></i> {{ $item->poli }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge-date">
+                                            <i class="bi bi-calendar-check"></i> {{ $item->tanggal_antrian }}
+                                        </span>
+                                    </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="11" class="text-center py-4 text-muted">
+                                        Belum ada data antrian.
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {{-- PAGINATION --}}
+            <div class="px-3 py-3">
                 {{ $antrian->links() }}
             </div>
         </div>
-    </div>
 
-    @include('livewire.antrian.deleteAntrian')
-</section><!-- End Hero -->
+        {{-- MODALS --}}
+        @include('livewire.antrian.createAntrian')
+        @include('livewire.antrian.editAntrian')
+        @include('livewire.antrian.deleteAntrian')
+
+    </div>
+</section>

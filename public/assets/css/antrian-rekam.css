@@ -1,0 +1,197 @@
+/* ================================
+   REKAM MEDIK / DIAGNOSA (PK)
+   ================================ */
+
+.pk-rekam-wrap{
+  margin-top: 110px;
+  padding-bottom: 60px;
+  min-height: calc(100vh - 170px);
+}
+
+.pk-rekam-head{
+  margin-bottom: 16px;
+}
+
+.pk-rekam-title{
+  font-weight: 900;
+  letter-spacing: .2px;
+  margin: 0;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.pk-rekam-subtitle{
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.pk-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.pk-pill .dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13,110,253,.14);
+}
+
+.pk-back-btn{
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+}
+
+/* Card utama */
+.pk-rekam-card{
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(15,23,42,.08);
+  box-shadow: 0 18px 55px rgba(15,23,42,.08);
+  overflow: hidden;
+}
+
+.pk-rekam-card .pk-card-body{
+  padding: 22px;
+}
+
+@media (min-width: 992px){
+  .pk-rekam-card .pk-card-body{
+    padding: 26px 28px;
+  }
+}
+
+/* Box info atas (Nama / Tanggal) */
+.pk-rekam-info{
+  border-radius: 16px;
+  border: 1px solid rgba(15,23,42,.10);
+  background: #f8fafc;
+  padding: 14px 16px;
+}
+
+.pk-rekam-info .label{
+  font-size: 12px;
+  color: #64748b;
+}
+
+.pk-rekam-info .value{
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+/* Section konten */
+.pk-section{
+  margin-top: 14px;
+}
+
+.pk-section .sec-label{
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.pk-content{
+  border-radius: 16px;
+  border: 1px solid rgba(15,23,42,.10);
+  background: #ffffff;
+  padding: 14px 16px;
+  color: #0f172a;
+  line-height: 1.6;
+}
+
+.pk-content.is-soft{
+  background: #f8fafc;
+}
+
+/* Alert rapih */
+.pk-alert{
+  border-radius: 16px;
+  border: 1px solid rgba(15,23,42,.08);
+  padding: 12px 14px;
+}
+
+/* ================================
+   DARK MODE (body.pk-dark)
+   ================================ */
+
+body.pk-dark .pk-rekam-title{
+  color: #ffffff;
+}
+
+body.pk-dark .pk-rekam-subtitle{
+  color: rgba(229,231,235,.70);
+}
+
+body.pk-dark .pk-pill{
+  border-color: rgba(255,255,255,.14);
+  background: rgba(10, 18, 36, 0.55);
+  color: rgba(229,231,235,.92);
+}
+
+body.pk-dark .pk-pill .dot{
+  background: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96,165,250,.16);
+}
+
+body.pk-dark .pk-rekam-card{
+  background: rgba(10, 18, 36, 0.72);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+  backdrop-filter: blur(10px);
+}
+
+body.pk-dark .pk-rekam-info{
+  background: rgba(2, 10, 26, 0.55);
+  border-color: rgba(255,255,255,.12);
+}
+
+body.pk-dark .pk-rekam-info .label{
+  color: rgba(229,231,235,.70);
+}
+
+body.pk-dark .pk-rekam-info .value{
+  color: rgba(255,255,255,.95);
+}
+
+body.pk-dark .pk-section .sec-label{
+  color: rgba(229,231,235,.70);
+}
+
+body.pk-dark .pk-content{
+  background: rgba(2, 10, 26, 0.55);
+  border-color: rgba(255,255,255,.12);
+  color: rgba(229,231,235,.92);
+}
+
+body.pk-dark .pk-content.is-soft{
+  background: rgba(2, 10, 26, 0.42);
+}
+
+body.pk-dark .pk-alert{
+  background: rgba(2, 10, 26, 0.50);
+  border-color: rgba(255,255,255,.12);
+  color: rgba(229,231,235,.90);
+}
+
+body.pk-dark .pk-back-btn.btn-outline-secondary{
+  color: rgba(229,231,235,.92);
+  border-color: rgba(255,255,255,.20);
+  background: rgba(255,255,255,.04);
+}
+body.pk-dark .pk-back-btn.btn-outline-secondary:hover{
+  background: rgba(255,255,255,.08);
+}

@@ -3,17 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Antrian;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
 class TvAntrianController extends Controller
 {
     private function normStatus($row): string
     {
-        // kalau kolom status ada, pakai itu
         $s = strtolower(trim((string)($row->status ?? '')));
 
-        // fallback kalau status kosong: pakai is_call
         if ($s === '') {
             $s = ((int)($row->is_call ?? 0) === 1) ? 'dipanggil' : 'menunggu';
         }
@@ -22,34 +19,43 @@ class TvAntrianController extends Controller
         return $s;
     }
 
+    private function tvCurrentQuery(string $today)
+    {
+        // status yang boleh tampil di TV sebagai "sedang dipanggil"
+        return Antrian::query()
+            ->whereDate('tanggal_antrian', $today)
+            ->whereIn('status', ['dipanggil', 'dilayani'])
+            // ✅ urutkan berdasarkan updated_at supaya PANGGIL ULANG otomatis naik ke atas
+            ->orderByDesc('updated_at');
+    }
+
+    private function tvNextQuery(string $today)
+    {
+        // status yang boleh tampil sebagai "antrian berikutnya"
+        // (menunggu saja)
+        return Antrian::query()
+            ->whereDate('tanggal_antrian', $today)
+            ->where('status', 'menunggu')
+            ->orderBy('no_antrian')
+            ->orderBy('id');
+    }
+
     public function index()
     {
         $today = now()->toDateString();
-
         $hasStatus = Schema::hasColumn('antrians', 'status');
 
         if ($hasStatus) {
-            // current = yang dipanggil / dilayani (bukan selesai)
+            $current = $this->tvCurrentQuery($today)->first();
+            $next    = $this->tvNextQuery($today)->take(5)->get();
+        } else {
+            // fallback sistem lama (tanpa status)
             $current = Antrian::whereDate('tanggal_antrian', $today)
-                ->whereIn('status', ['dipanggil', 'dilayani'])
-                ->orderByDesc('called_at')
+                ->where('is_call', 1)
                 ->orderByDesc('updated_at')
                 ->first();
 
-            // next = yang menunggu
             $next = Antrian::whereDate('tanggal_antrian', $today)
-                ->where('status', 'menunggu')
-                ->orderBy('id')
-                ->take(5)
-                ->get();
-        } else {
-            // fallback sistem lama
-            $current = Antrian::where('tanggal_antrian', $today)
-                ->where('is_call', 1)
-                ->orderBy('updated_at', 'desc')
-                ->first();
-
-            $next = Antrian::where('tanggal_antrian', $today)
                 ->where('is_call', 0)
                 ->orderBy('no_antrian', 'asc')
                 ->take(5)
@@ -66,24 +72,15 @@ class TvAntrianController extends Controller
         $hasStatus = Schema::hasColumn('antrians', 'status');
 
         if ($hasStatus) {
+            $current = $this->tvCurrentQuery($today)->first();
+            $next    = $this->tvNextQuery($today)->take(5)->get();
+        } else {
             $current = Antrian::whereDate('tanggal_antrian', $today)
-                ->whereIn('status', ['dipanggil', 'dilayani'])
-                ->orderByDesc('called_at')
+                ->where('is_call', 1)
                 ->orderByDesc('updated_at')
                 ->first();
 
             $next = Antrian::whereDate('tanggal_antrian', $today)
-                ->where('status', 'menunggu')
-                ->orderBy('id')
-                ->take(5)
-                ->get();
-        } else {
-            $current = Antrian::where('tanggal_antrian', $today)
-                ->where('is_call', 1)
-                ->orderBy('updated_at', 'desc')
-                ->first();
-
-            $next = Antrian::where('tanggal_antrian', $today)
                 ->where('is_call', 0)
                 ->orderBy('no_antrian', 'asc')
                 ->take(5)
@@ -92,20 +89,26 @@ class TvAntrianController extends Controller
 
         return response()->json([
             'current' => $current ? [
-                'no_antrian' => $current->no_antrian,
-                'poli'       => $current->poli,
-                'status'     => $this->normStatus($current),
+                'id'        => $current->id,
+                'no_antrian'=> $current->no_antrian,
+                'poli'      => $current->poli,
+                'status'    => $this->normStatus($current),
 
-                // 🔥 ini kunci biar PANGGIL ULANG memicu suara walau nomor sama
-                'called_at'  => optional($current->called_at)->toIso8601String(),
+                // ✅ kunci trigger suara / perubahan:
+                // pakai updated_at (selalu berubah kalau panggil ulang)
+                'called_key' => optional($current->updated_at)->toIso8601String(),
+
+                // OPTIONAL kalau kamu nanti punya kolom called_at:
+                // 'called_at'  => optional($current->called_at)->toIso8601String(),
                 'updated_at' => optional($current->updated_at)->toIso8601String(),
             ] : null,
 
             'next' => $next->map(function ($row) {
                 return [
-                    'no_antrian' => $row->no_antrian,
-                    'poli'       => $row->poli,
-                    'status'     => $this->normStatus($row),
+                    'id'        => $row->id,
+                    'no_antrian'=> $row->no_antrian,
+                    'poli'      => $row->poli,
+                    'status'    => $this->normStatus($row),
                 ];
             })->values(),
         ]);

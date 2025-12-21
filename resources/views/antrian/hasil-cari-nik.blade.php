@@ -1,8 +1,9 @@
 @extends('layouts.main')
-@include('partials.navbar')
+
+@section('title', 'Hasil Pencarian Antrian')
 
 @section('content')
-<section id="hasil-antrian" class="py-5" style="margin-top: 90px;">
+<section id="hasil-antrian" class="py-5 pk-hasil-antrian">
   <div class="container">
 
     {{-- HEADER --}}
@@ -36,14 +37,24 @@
         </span>
       </div>
 
+      {{-- balik ke form cari (tanpa query) --}}
       <a href="{{ route('antrian.cari') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
         <i class="bi bi-arrow-left me-1"></i> Cari NIK lain
       </a>
     </div>
 
+    @php
+      /**
+       * ✅ Back URL wajib mengarah ke halaman hasil pencarian ini (GET)
+       * supaya tombol kembali dari Edit/Status/Diagnosa selalu balik ke sini.
+       */
+      $backUrl = route('antrian.cari', ['no_ktp' => $nik]);
+    @endphp
+
     {{-- CARD TABLE --}}
     <div class="card card-soft border-0 rounded-4 shadow-sm overflow-hidden">
-      <div class="card-header bg-white border-0 py-3 px-3 px-md-4">
+
+      <div class="card-header bg-transparent border-0 py-3 px-3 px-md-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div class="fw-semibold">
             <i class="bi bi-table me-1 text-primary"></i> Daftar Antrian
@@ -71,9 +82,7 @@
 
             <tbody>
               @foreach ($antrians as $index => $antrian)
-                @php
-                  $called = ((int)$antrian->is_call === 1);
-                @endphp
+                @php $called = ((int) $antrian->is_call === 1); @endphp
 
                 <tr>
                   <td class="text-center">{{ $index + 1 }}</td>
@@ -110,45 +119,54 @@
                   <td class="text-center">
                     <div class="d-flex flex-wrap justify-content-center gap-2">
 
-                      {{-- DIAGNOSA --}}
-                      <a href="{{ route('antrian.rekam-medik', $antrian->id) }}"
-                         class="btn btn-primary btn-sm rounded-pill px-3">
-                        <i class="bi bi-clipboard2-pulse me-1"></i>
-                        {{ $called ? 'Lihat Diagnosa' : 'Diagnosa' }}
-                      </a>
+                      {{-- Diagnosa hanya bisa jika SUDAH DIPANGGIL --}}
+                      @if($called)
+                        <a href="{{ route('antrian.rekam-medik', ['antrian' => $antrian->id, 'back' => $backUrl]) }}"
+                           class="btn btn-primary btn-sm rounded-pill px-3">
+                          <i class="bi bi-clipboard2-pulse me-1"></i> Lihat Diagnosa
+                        </a>
+                      @else
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm rounded-pill px-3"
+                                disabled aria-disabled="true"
+                                title="Diagnosa hanya bisa dilihat setelah dipanggil/dilayani dokter">
+                          <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosa
+                        </button>
+                      @endif
 
+                      {{-- Edit/Status/Hapus hanya bisa saat belum dipanggil --}}
                       @if(!$called)
-                        {{-- EDIT --}}
-                        <a href="{{ route('antrian.edit', $antrian->id) }}"
+                        <a href="{{ route('antrian.edit', ['antrian' => $antrian->id, 'back' => $backUrl]) }}"
                            class="btn btn-warning btn-sm rounded-pill px-3">
                           <i class="bi bi-pencil-square me-1"></i> Edit
                         </a>
 
-                        {{-- STATUS --}}
-                        <a href="{{ route('antrian.status', $antrian->id) }}"
+                        <a href="{{ route('antrian.status', ['antrian' => $antrian->id, 'back' => $backUrl]) }}"
                            class="btn btn-info btn-sm rounded-pill px-3 text-white">
                           <i class="bi bi-geo-alt me-1"></i> Status
                         </a>
 
-                        {{-- HAPUS --}}
                         <form action="{{ route('antrian.destroy', $antrian->id) }}"
                               method="POST"
                               onsubmit="return confirm('Yakin ingin menghapus antrian ini?')">
                           @csrf
                           @method('DELETE')
+
+                          {{-- bawa backUrl agar setelah delete kembali ke hasil pencarian --}}
+                          <input type="hidden" name="back" value="{{ $backUrl }}">
+
                           <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
                             <i class="bi bi-trash3 me-1"></i> Hapus
                           </button>
                         </form>
                       @else
-                        {{-- tombol nonaktif tampil tetap rapi --}}
-                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled title="Tidak tersedia setelah dipanggil">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled>
                           <i class="bi bi-pencil-square me-1"></i> Edit
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled title="Tidak tersedia setelah dipanggil">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled>
                           <i class="bi bi-geo-alt me-1"></i> Status
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled title="Tidak tersedia setelah dipanggil">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled>
                           <i class="bi bi-trash3 me-1"></i> Hapus
                         </button>
                       @endif
@@ -184,27 +202,4 @@
 
   </div>
 </section>
-
-<style>
-  #hasil-antrian .card-soft { border-radius: 18px; }
-  #hasil-antrian .table td, #hasil-antrian .table th { font-size: .92rem; }
-  #hasil-antrian .btn-sm { padding: .38rem .85rem; font-size: .78rem; }
-  #hasil-antrian .table-hover tbody tr:hover td { background: rgba(13,110,253,.035); }
-
-  .notice-icon{
-    width:42px; height:42px; border-radius:14px;
-    display:flex; align-items:center; justify-content:center;
-    background: rgba(13,110,253,.08);
-    color: #0d6efd;
-    font-size: 20px;
-    flex: 0 0 auto;
-  }
-
-  /* dark mode support (kalau body punya .dark-mode) */
-  .dark-mode #hasil-antrian .card,
-  .dark-mode #hasil-antrian .card-header { background:#0f172a !important; color:#e5e7eb; }
-  .dark-mode #hasil-antrian .table { color:#e5e7eb; }
-  .dark-mode #hasil-antrian .table thead { color:#111827; }
-  .dark-mode #hasil-antrian .table-hover tbody tr:hover td { background: rgba(255,255,255,.04); }
-</style>
 @endsection
