@@ -164,7 +164,11 @@
                 <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
                     <div class="count-box">
                         <i class="fas fa-user-md"></i>
-                        <span data-purecounter-start="0" data-purecounter-end="25" data-purecounter-duration="1" class="purecounter"></span>
+                        {{-- Angka pasti tampil --}}
+                        <span data-purecounter-start="0"
+                              data-purecounter-end="25"
+                              data-purecounter-duration="1"
+                              class="purecounter">25</span>
                         <p>Dokter &amp; Bidan</p>
                     </div>
                 </div>
@@ -172,7 +176,10 @@
                 <div class="col-lg-3 col-md-6 mt-5 mt-md-0" data-aos="fade-up" data-aos-delay="200">
                     <div class="count-box">
                         <i class="far fa-hospital"></i>
-                        <span data-purecounter-start="0" data-purecounter-end="7" data-purecounter-duration="1" class="purecounter"></span>
+                        <span data-purecounter-start="0"
+                              data-purecounter-end="7"
+                              data-purecounter-duration="1"
+                              class="purecounter">7</span>
                         <p>Poliklinik</p>
                     </div>
                 </div>
@@ -180,7 +187,10 @@
                 <div class="col-lg-3 col-md-6 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="300">
                     <div class="count-box">
                         <i class="fas fa-flask"></i>
-                        <span data-purecounter-start="0" data-purecounter-end="4" data-purecounter-duration="1" class="purecounter"></span>
+                        <span data-purecounter-start="0"
+                              data-purecounter-end="4"
+                              data-purecounter-duration="1"
+                              class="purecounter">4</span>
                         <p>Laboratorium Penelitian</p>
                     </div>
                 </div>
@@ -188,7 +198,10 @@
                 <div class="col-lg-3 col-md-6 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="400">
                     <div class="count-box">
                         <i class="fas fa-award"></i>
-                        <span data-purecounter-start="0" data-purecounter-end="150" data-purecounter-duration="1" class="purecounter"></span>
+                        <span data-purecounter-start="0"
+                              data-purecounter-end="125"
+                              data-purecounter-duration="1"
+                              class="purecounter">125</span>
                         <p>Penghargaan</p>
                     </div>
                 </div>
@@ -441,4 +454,3 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 @endpush
-

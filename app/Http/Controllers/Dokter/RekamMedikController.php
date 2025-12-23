@@ -66,6 +66,31 @@ class RekamMedikController extends Controller
         return $map[$code] ?? (empty($code) ? [] : [$code]);
     }
 
+    private function normStatus(?string $status, ?int $isCall): string
+    {
+        $s = strtolower(trim((string) $status));
+
+        if ($s === '') {
+            $s = ((int)($isCall ?? 0) === 1) ? 'dipanggil' : 'menunggu';
+        }
+
+        if ($s === 'lewat') $s = 'dilewati';
+        if ($s === 'tidak hadir' || $s === 'tidak-hadir') $s = 'tidak_hadir';
+
+        return $s;
+    }
+
+    /**
+     * ✅ Gate diagnosa:
+     * - BOLEH: dipanggil / dilayani / selesai
+     * - TIDAK: menunggu / dilewati / tidak_hadir
+     */
+    private function canFillDiagnosa(Antrian $antrian): bool
+    {
+        $status = $this->normStatus($antrian->status ?? null, (int)($antrian->is_call ?? 0));
+        return in_array($status, ['dipanggil', 'dilayani', 'selesai'], true);
+    }
+
     public function store(Request $request, $antrianId)
     {
         $request->validate([
@@ -76,10 +101,12 @@ class RekamMedikController extends Controller
 
         $antrian = Antrian::findOrFail($antrianId);
 
-        if ((int) $antrian->is_call !== 1) {
+        // ✅ FIX: jangan pakai is_call doang, pakai status juga
+        if (!$this->canFillDiagnosa($antrian)) {
             return back()->with('error', 'Pasien belum dipanggil. Panggil dulu sebelum isi diagnosa.');
         }
 
+        // cek akses poli dokter
         $allowed = array_map('strtolower', $this->allowedPoliValues());
         $antrianPoli = strtolower(trim((string) ($antrian->poli ?? $antrian->poli_code ?? '')));
 
@@ -187,7 +214,7 @@ class RekamMedikController extends Controller
                     $sub->where('rekam_mediks.no_ktp', 'like', "%{$q}%")
                         ->orWhere('rekam_mediks.diagnosa', 'like', "%{$q}%")
                         ->orWhere('rekam_mediks.poli', 'like', "%{$q}%")
-                        ->orWhere('antrians.nama', 'like', "%{$q}%"); // ✅ cari nama juga
+                        ->orWhere('antrians.nama', 'like', "%{$q}%");
                 });
             })
             ->orderByDesc('rekam_mediks.tanggal_kunjungan')

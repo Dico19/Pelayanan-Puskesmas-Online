@@ -12,6 +12,7 @@
         'selesai'       => 'Selesai',
         'lewati'        => 'Lewat',
         'lewat'         => 'Lewat',
+        'tidak_hadir'   => 'Tidak Hadir',
     ];
 
     $ACTION_BADGE = [
@@ -21,25 +22,28 @@
         'selesai'       => 'success',
         'lewati'        => 'danger',
         'lewat'         => 'danger',
+        'tidak_hadir'   => 'dark',
     ];
 
     $labelAksi = fn($action) => $ACTION_LABELS[(string)$action] ?? ucfirst((string)$action);
     $badgeAksi = fn($action) => $ACTION_BADGE[(string)$action] ?? 'dark';
 
-    $statTotal        = $stats['total'] ?? 0;
-    $statDipanggil    = $stats['dipanggil'] ?? 0;
-    $statMulai        = $stats['mulai'] ?? 0;
-    $statSelesaiLewat = $stats['selesai_lewat'] ?? 0;
+    $statTotal      = $stats['total'] ?? 0;
+    $statDipanggil  = $stats['dipanggil'] ?? 0;
+    $statMulai      = $stats['mulai'] ?? 0;
+    $statSelesai    = $stats['selesai'] ?? 0;
+    $statLewat      = $stats['lewat'] ?? 0;
+    $statTidakHadir = $stats['tidak_hadir'] ?? 0;
 @endphp
 
 <style>
-    /* ============ AUDIT STYLE (langsung di view biar pasti kebaca) ============ */
     .audit-wrap{ padding: 6px 2px 30px; }
+
     .audit-hero{
         background: linear-gradient(135deg, rgba(15,76,255,.08), rgba(0,184,255,.06));
         border: 1px solid rgba(0,0,0,.06);
         border-radius: 18px;
-        padding: 18px 18px;
+        padding: 18px;
         box-shadow: 0 10px 26px rgba(0,0,0,.06);
     }
     .audit-title{ font-weight: 800; letter-spacing: .2px; margin:0; }
@@ -58,7 +62,7 @@
         border-radius: 18px;
         background: #fff;
         box-shadow: 0 10px 26px rgba(0,0,0,.06);
-        padding: 16px 16px;
+        padding: 16px;
         height: 100%;
         position: relative;
     }
@@ -78,6 +82,7 @@
     .audit-icon.success{ background: rgba(25,135,84,.12); color:#198754; }
     .audit-icon.info{ background: rgba(13,202,240,.14); color:#0dcaf0; }
     .audit-icon.danger{ background: rgba(220,53,69,.12); color:#dc3545; }
+    .audit-icon.dark{ background: rgba(33,37,41,.12); color:#212529; }
 
     .audit-table thead th{
         font-size:.72rem;
@@ -92,6 +97,7 @@
         z-index: 2;
     }
     .audit-table tbody tr:hover{ background: rgba(13,110,253,.04); }
+
     .chip{
         display:inline-flex; align-items:center; gap:6px;
         padding:4px 10px;
@@ -101,7 +107,18 @@
         background:#f8f9fa;
         white-space:nowrap;
     }
+
     .audit-actions{ display:flex; gap: .5rem; justify-content:flex-end; }
+
+    /* ✅ pagination & footer rapih seperti Bootstrap */
+    .audit-pagination{
+        display:flex;
+        justify-content:flex-end;
+        align-items:center;
+    }
+    .audit-pagination .pagination{
+        margin: 0;
+    }
 </style>
 
 <div class="audit-wrap container-fluid">
@@ -111,7 +128,7 @@
         <div>
             <h2 class="audit-title">Audit Log</h2>
             <div class="audit-sub">
-                Catatan aksi dokter: <b>panggil</b> / <b>mulai</b> / <b>selesai</b> / <b>lewat</b>.
+                Catatan aksi dokter: <b>panggil</b> / <b>panggil ulang</b> / <b>mulai</b> / <b>selesai</b> / <b>lewat</b> / <b>tidak hadir</b>.
             </div>
         </div>
 
@@ -122,7 +139,7 @@
 
     {{-- STATS --}}
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-2">
             <div class="audit-stat">
                 <div class="audit-icon"><i class="bi bi-collection"></i></div>
                 <div class="lbl">Total (Filter)</div>
@@ -130,7 +147,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-2">
             <div class="audit-stat">
                 <div class="audit-icon"><i class="bi bi-telephone-outbound"></i></div>
                 <div class="lbl">Dipanggil</div>
@@ -138,7 +155,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-2">
             <div class="audit-stat">
                 <div class="audit-icon info"><i class="bi bi-play-circle"></i></div>
                 <div class="lbl">Mulai</div>
@@ -146,11 +163,27 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-2">
             <div class="audit-stat">
                 <div class="audit-icon success"><i class="bi bi-check2-circle"></i></div>
-                <div class="lbl">Selesai / Lewat</div>
-                <div class="val">{{ $statSelesaiLewat }}</div>
+                <div class="lbl">Selesai</div>
+                <div class="val">{{ $statSelesai }}</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <div class="audit-stat">
+                <div class="audit-icon danger"><i class="bi bi-skip-forward-fill"></i></div>
+                <div class="lbl">Lewat</div>
+                <div class="val">{{ $statLewat }}</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <div class="audit-stat">
+                <div class="audit-icon dark"><i class="bi bi-person-x"></i></div>
+                <div class="lbl">Tidak Hadir</div>
+                <div class="val">{{ $statTidakHadir }}</div>
             </div>
         </div>
     </div>
@@ -214,7 +247,7 @@
 
     {{-- TABLE --}}
     <div class="audit-card">
-        <div class="table-responsive" style="max-height: 520px;">
+        <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 audit-table">
                 <thead>
                 <tr>
@@ -224,7 +257,7 @@
                     <th style="width:90px;">No</th>
                     <th>Pasien</th>
                     <th style="width:130px;">Aksi</th>
-                    <th style="width:300px;">Perubahan</th>
+                    <th style="width:340px;">Perubahan</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -233,8 +266,9 @@
                         $before = $log->before ?? [];
                         $after  = $log->after ?? [];
 
+                        // ringkas perubahan yang relevan
                         $summary = [];
-                        foreach(['status','is_call'] as $k){
+                        foreach(['status','is_call','skip_count','absent_at'] as $k){
                             $bv = $before[$k] ?? null;
                             $av = $after[$k] ?? null;
                             if ($bv !== null || $av !== null) {
@@ -314,8 +348,11 @@
             </table>
         </div>
 
+        {{-- ✅ FOOTER pagination FIX (Bootstrap 5) --}}
         <div class="p-3 border-top">
-            {{ $logs->links() }}
+            <div class="audit-pagination">
+                {!! $logs->onEachSide(1)->links('pagination::bootstrap-5') !!}
+            </div>
         </div>
     </div>
 

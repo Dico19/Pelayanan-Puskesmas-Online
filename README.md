@@ -1,93 +1,166 @@
-NAMA ANGGOTA KELOMPOK :
-- AHMAD NA'IM BASHIROH (14022300034)
-- ILHAM RIYADI (14022300009)
-- RITAJU ARRIFKIYANI (14022300007)
-- INDRA SAPUTRA DEWANTARA (14022300059)
+# Puskesmas Kaligandu — Sistem Antrian & Layanan Online
+
+Aplikasi web untuk **antrian online Puskesmas** yang membantu pasien mengambil nomor antrian berdasarkan poli & tanggal, serta membantu petugas/dokter mengelola antrian, status layanan, rekam medis, laporan, dan audit aktivitas.
 
 ---
 
-Pelayanan Sistem Antrian Online Puskesmas Kaligandu
+## Ringkasan
+Project ini terdiri dari 3 area utama:
+1. **Halaman Publik (Pasien)**: ambil antrian, lihat daftar antrian (dengan privasi data).
+2. **Staff/Admin**: dashboard, data pasien, laporan, analitik, audit log.
+3. **Dokter per Poli**: dashboard dokter, kelola antrian, diagnosa/rekam medis, riwayat.
 
 ---
 
-🔥 Project ini adalah sebuah aplikasi sistem antrian berbasis web yang dibuat menggunakan Laravel. Tujuan utama aplikasi ini adalah untuk mempermudah proses pendaftaran pasien di Puskesmas secara online, sehingga pasien tidak perlu menunggu lama secara manual dan petugas dapat mengelola antrian dengan lebih tertib dan efisien.
+## Fitur Utama
 
-🚀 Aplikasi ini menyediakan fitur untuk pasien, petugas, dan admin dengan akses yang berbeda sesuai kebutuhan masing-masing.
-
-✨ Fitur Utama
-
-🔹 1. Pendaftaran Antrian Online
-- Pasien dapat mengambil nomor antrian secara online.
-- Memilih poli tujuan (Poli Umum, Poli Gigi, Poli Anak, Poli Lansia, Poli KIA, dan lainnya).
-- Mendapat nomor antrian otomatis setelah submit.
-
-🔹 2. Dashboard Admin
-- Mengelola data antrian per poli.
-- Melihat antrian yang sedang berjalan.
-- Mengontrol status antrian (dipanggil, selesai, batal).
-- Cetak laporan antrian harian.
-
-🔹 3. Dashboard Petugas Poli
-- Melihat daftar antrian sesuai poli.
-- Memanggil pasien berikutnya.
-- Mengubah status antrian.
-
-🔹 4. Laporan Antrian
-- Rekap data antrian berdasarkan tanggal.
-- Export / print data antrian.
-
-🔹 5. Sistem Role Management
-- Role Admin
-- Role User/Pasien
-- Setiap role memiliki akses dan tampilan yang berbeda.
-
-🔹 6. Otentikasi
-- Login, register, dan validasi menggunakan Auth Laravel.
-- Middleware untuk membatasi akses halaman berdasarkan role.
+### 1) Pasien (Publik)
+- **Ambil Antrian Online** berdasarkan:
+  - Poli (Umum, Gigi, THT, Balita, KIA & KB, Nifas/PNC, Lansia & Disabilitas)
+  - Tanggal layanan (mendukung validasi hari libur/Minggu bila diterapkan)
+- **Validasi Input Pasien**
+  - NIK 16 digit, No HP 10–15 digit, dsb.
+- **Anti Duplikat Antrian**
+  - NIK tidak bisa ambil antrian lagi jika masih punya antrian **aktif** pada tanggal yang sama.
+- **Blokir Otomatis NIK**
+  - Jika tercatat **3× tidak hadir** (threshold dapat disesuaikan).
+  - Mendukung reset/unblock oleh admin (jika tabel reset digunakan).
+- **Tampilan Daftar Antrian Publik**
+  - Mendukung kebijakan privasi: tampilkan data seperlunya / sensor data sensitif.
 
 ---
 
-🛠️ Teknologi yang Digunakan
-- Laravel (PHP Framework)
-- Blade Template Engine
-- MySQL / MariaDB
-- Bootstrap & CSS Custom
-- Livewire
-- PHP 8+
+### 2) Staff / Admin
+- **Login Staff** dengan tampilan modern + toggle show/hide password.
+- **Dashboard Admin/Staff**
+- **Data Pasien**
+- **Laporan**
+  - Mendukung **Export laporan PDF/Excel** (sudah ada di project).
+- **Analitik**
+- **Audit Log (Super Admin)**
+  - Pencatatan aktivitas penting sistem (akses khusus).
 
 ---
 
-📦 Kegunaan Aplikasi
-Aplikasi ini cocok digunakan untuk:
-- Puskesmas
-- Klinik kecil
-- Sistem antrian loket serbaguna
-- Pembelajaran sistem informasi manajemen antrian
+### 3) Dokter (Per Poli)
+- **Dashboard Dokter Per Poli**
+- **Kelola Antrian**
+  - Panggil
+  - Panggil ulang
+  - Mulai / Layani
+  - Selesai
+  - Lewatkan
+  - Tidak hadir
+  - Riwayat pasien
+- **Rekam Medik / Diagnosa**
+  - Diagnosa hanya aktif setelah pasien **dipanggil** (validasi server-side).
+  - Akses poli dibatasi: dokter hanya dapat mengelola antrian sesuai poli-nya.
+- **Riwayat Rekam Medik**
+  - Modal (AJAX) + halaman riwayat per pasien.
+- **Log Aktivitas Dokter**
+  - Aktivitas seperti aksi **panggil/selesai/diagnosa** sudah tercatat (sudah ada di project).
 
 ---
 
-Dengan sistem ini, proses antrian menjadi lebih:
-- Cepat
-- Teratur
-- Transparan
-- Mudah dikelola oleh petugas
+## Aturan Bisnis (Business Rules)
+
+### Status Antrian Aktif
+Antrian dianggap **aktif** jika status termasuk:
+- `menunggu`
+- `dipanggil`
+- `dilayani`
+- `dilewati`
+
+Status yang **tidak aktif**:
+- `selesai`
+- `tidak_hadir`
+
+### Akses Diagnosa / Rekam Medik
+Dokter dapat menyimpan diagnosa jika:
+- Pasien sudah dipanggil (`is_call = 1`)
+- Poli antrian sesuai poli dokter (akses dibatasi per poli)
+
+### Blokir NIK
+- Jika NIK tercatat **3× tidak hadir**, pasien akan diblokir sementara untuk ambil antrian.
+- Admin dapat melakukan unblock/reset (jika modul reset diaktifkan).
 
 ---
-<img width="1919" height="995" alt="Screenshot 2025-12-01 210709" src="https://github.com/user-attachments/assets/875310c6-b535-4713-ba98-4f2bcc31bc83" />
-<img width="1919" height="942" alt="Screenshot 2025-12-01 210722" src="https://github.com/user-attachments/assets/ecc67a68-3f52-4317-86d9-d2cf851da885" />
-<img width="1914" height="996" alt="Screenshot 2025-12-01 210740" src="https://github.com/user-attachments/assets/7f54f7b4-63c0-4dea-b9e7-4b31e02fc1f0" />
-<img width="1906" height="992" alt="Screenshot 2025-12-01 210752" src="https://github.com/user-attachments/assets/c5bb7668-7a52-4eda-a2d8-3fa55abe3728" />
-<img width="1919" height="979" alt="Screenshot 2025-12-01 084931" src="https://github.com/user-attachments/assets/cc10574c-5100-4507-86c2-74840bef53e2" />
-<img width="1919" height="999" alt="Screenshot 2025-12-01 085000" src="https://github.com/user-attachments/assets/119aeb82-135e-48f2-882e-cd359d20a22c" />
-<img width="1919" height="957" alt="Screenshot 2025-12-01 090845" src="https://github.com/user-attachments/assets/b7bbf5ce-f874-4848-b3d2-689fc09065db" />
-<img width="1919" height="1001" alt="Screenshot 2025-11-30 131302" src="https://github.com/user-attachments/assets/4aef75f7-9864-4f81-a5a7-3e06d83ee212" />
-<img width="1919" height="987" alt="Screenshot 2025-11-30 131252" src="https://github.com/user-attachments/assets/1be6df00-91e8-4b8d-b21f-89fb4b2ae6b5" />
 
+## Privasi Data & Etika Tampilan Publik
+Karena halaman publik dapat dilihat umum, disarankan:
+- **Minimalisasi data sensitif** yang ditampilkan (alamat, pekerjaan, tanggal lahir).
+- **Sensor NIK / No HP** jika perlu sebagai verifikasi pasien:
+  - Contoh: tampilkan beberapa digit awal + beberapa digit akhir (bukan full).
+- Pastikan data lengkap hanya terlihat oleh staff/dokter yang login.
 
+---
 
+## Role & Akses
+- **Super Admin**
+  - Semua akses admin + Audit Log.
+- **Dokter (per poli)**
+  - Kelola antrian poli masing-masing + rekam medis.
 
+---
 
+## Modul / Komponen (Ringkas)
+- **Antrian**
+  - Ambil antrian, filter poli, pagination, validasi anti duplikat, blokir NIK.
+- **Dokter**
+  - Kelola antrian per poli, status pasien aktif, tindakan layanan.
+- **Rekam Medik**
+  - Diagnosa, catatan, resep, riwayat pasien.
+- **Laporan**
+  - Rekap data + **export PDF/Excel**.
+- **Audit & Log Aktivitas**
+  - Audit log sistem dan log aktivitas dokter.
 
+---
 
+## Saran Pengembangan Lanjutan (Opsional)
+- Notifikasi WhatsApp/SMS saat nomor dipanggil.
+- QR Code/Kode booking untuk validasi cepat.
+- Pengaturan jam layanan per poli (cutoff otomatis).
+- Multi loket / multi dokter per poli.
+- Penjadwalan dokter + sinkron statistik real-time.
+- Backup & monitoring database (mengurangi risiko error XAMPP/MySQL).
 
+---
 
+## Developer
+**Dicoding**
+
+---
+
+## Screenshot Halaman dan Fitur
+![Halaman-Hero](public/assets/screenshots/Halaman Hero.png)
+![Halaman-Poli](public/assets/screenshots/Halaman Poli.png)
+![Halaman-Ulasan](public/assets/screenshots/Halaman Ulasan.png)
+![Halaman-Contact](public/assets/screenshots/Halaman Contact.png)
+![Pilih-Poli](public/assets/screenshots/Pilih Poli.png)
+![Pilih-Tanggal](public/assets/screenshots/Pilih Tanggal.png)
+![Form-Antrian](public/assets/screenshots/Form Antrian.png)
+![Status-Antrian](public/assets/screenshots/Status Antrian.png)
+![Ambil-Antrian](public/assets/screenshots/Ambil Antrian.png)
+![Antrianku](public/assets/screenshots/Antrianku.png)
+![Hasil-Pencarian](public/assets/screenshots/Hasil Pencarian.png)
+![Hasil-Pencarian-NIK](public/assets/screenshots/Hasil Pencarian NIK.png)
+![Edit-Antrian](public/assets/screenshots/Edit Antrian.png)
+![Cetak-Antrian](public/assets/screenshots/Cetak Antrian.png)
+![Login-Staff](public/assets/screenshots/Login Staff.png)
+![Monitor](public/assets/screenshots/Monitor.png)
+![Pasien-Lihat-Diagnosa](public/assets/screenshots/Pasien Lihat Diagnosa.png)
+![Dashboard-Super-Admin](public/assets/screenshots/Dashboard Super Admin.png)
+![Data-Pasien-Super-Admin-1](public/assets/screenshots/Data Pasien Super Admin 1.png)
+![Data-Pasien-Super-Admin-2](public/assets/screenshots/Data Pasien Super Admin 2.png)
+![Laporan-Antrian-Super-Admin](public/assets/screenshots/Laporan Antrian Super Admin.png)
+![Audit-Log-Super-Admin-1](public/assets/screenshots/Audit Log Super Admin 1.png)
+![Audit-Log-Super-Admin-2](public/assets/screenshots/Audit Log Super Admin 2.png)
+![Analitik-Super-Admin](public/assets/screenshots/Analitik Super Admin.png)
+![Dashboard-Dokter](public/assets/screenshots/Dashboard Dokter.png)
+![Daftar-Antrian-Dokter](public/assets/screenshots/Daftar Antrian Dokter.png)
+![Statistik-Dokter](public/assets/screenshots/Statistik Dokter.png)
+![Riwayat-Dokter-1](public/assets/screenshots/Riwayat Dokter 1.png)
+![Riwayat-Dokter-2](public/assets/screenshots/Riwayat Dokter 2.png)
+![Reset-Antrian](public/assets/screenshots/Reset Antrian.png)
+![Diagnosa](public/assets/screenshots/Diagnosa.png)

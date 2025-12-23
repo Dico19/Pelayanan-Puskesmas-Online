@@ -46,10 +46,12 @@ class DashboardAuditLogController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total'        => (clone $base)->count(),
-            'dipanggil'    => (clone $base)->where('action', 'dipanggil')->count(),
-            'mulai'        => (clone $base)->where('action', 'mulai')->count(),
-            'selesai_lewat'=> (clone $base)->whereIn('action', ['selesai','lewati','lewat'])->count(),
+            'total'       => (clone $base)->count(),
+            'dipanggil'   => (clone $base)->where('action', 'dipanggil')->count(),
+            'mulai'       => (clone $base)->where('action', 'mulai')->count(),
+            'selesai'     => (clone $base)->where('action', 'selesai')->count(),
+            'lewat'       => (clone $base)->whereIn('action', ['lewati','lewat'])->count(),
+            'tidak_hadir' => (clone $base)->where('action', 'tidak_hadir')->count(),
         ];
 
         $polis = AuditLog::query()

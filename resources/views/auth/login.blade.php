@@ -22,6 +22,46 @@
             justify-content: center;
         }
 
+        /* ✅ tombol kembali */
+        .pk-login-back{
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 9999;
+
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 10px 14px;
+            border-radius: 999px;
+
+            background: rgba(255,255,255,.18);
+            border: 1px solid rgba(255,255,255,.25);
+            color: #fff;
+            text-decoration: none;
+
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+
+            box-shadow: 0 12px 30px rgba(0,0,0,.25);
+            transition: .2s ease;
+        }
+        .pk-login-back:hover{
+            transform: translateY(-1px);
+            background: rgba(255,255,255,.26);
+            color: #fff;
+        }
+        .pk-login-back i{
+            font-size: 18px;
+            line-height: 1;
+        }
+        .pk-login-back span{
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: .2px;
+        }
+
         .auth-wrapper {
             width: 100%;
             max-width: 420px;
@@ -149,6 +189,18 @@
 </head>
 <body>
 
+@php
+    $backUrl = url()->previous();
+    if (!$backUrl || str_contains($backUrl, '/login')) {
+        $backUrl = url('/');
+    }
+@endphp
+
+<a href="{{ $backUrl }}" class="pk-login-back">
+    <i class="bi bi-arrow-left"></i>
+    <span>Kembali</span>
+</a>
+
 <div class="auth-wrapper">
     <div class="auth-card">
 
@@ -158,7 +210,7 @@
                 <img src="/assets/img/logo-puskesmas.png" alt="Logo Puskesmas" class="login-logo">
             </div>
             <div class="auth-title">Masuk ke Akun Anda</div>
-            <div class="auth-subtitle">Admin Antrian Online Puskesmas Kaligandu</div>
+            <div class="auth-subtitle">Staff Pelayanan Online Puskesmas Kaligandu</div>
         </div>
 
         <div class="px-4 pb-2 pt-1">
@@ -207,7 +259,7 @@
                                required
                                class="form-control @error('password') is-invalid @enderror"
                                placeholder="••••••••">
-                        <span class="toggle-password" onclick="togglePassword()">
+                        <span class="toggle-password" onclick="togglePassword()" role="button" aria-label="Tampilkan/Sembunyikan password">
                             <i class="bi bi-eye-slash" id="toggleIcon"></i>
                         </span>
                     </div>
@@ -223,7 +275,7 @@
         </div>
 
         <div class="auth-footer">
-            Sistem Antrian Online <span>Puskesmas Kaligandu</span>
+            Pelayanan Online <span>Puskesmas Kaligandu</span>
         </div>
     </div>
 </div>

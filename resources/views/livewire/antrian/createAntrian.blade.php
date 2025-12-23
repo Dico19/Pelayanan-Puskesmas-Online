@@ -12,7 +12,7 @@
                     @elseif($step == 2)
                         Pilih Tanggal
                     @else
-                        Form Ambil Antrian
+                        Form 
                     @endif
                 </h1>
 
@@ -25,6 +25,25 @@
 
             <form wire:submit.prevent="save">
                 <div class="modal-body">
+
+                    {{-- ✅ ALERT GLOBAL (duplicate / blokir / error umum) --}}
+                    @if (!empty($uiAlert))
+                        <div class="alert alert-danger d-flex gap-2 align-items-start" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                            <div>
+                                <div class="fw-bold">Tidak bisa mengambil antrian</div>
+                                <div style="font-size: 13px;">{{ $uiAlert }}</div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- ✅ ALERT SUCCESS (kalau kamu pakai session flash di Livewire) --}}
+                    @if (session()->has('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
                     {{-- ===================== STEP 1 : PILIH POLI ===================== --}}
                     @if ($step == 1)
@@ -253,16 +272,22 @@
                             wire:loading.attr="disabled">
                         Keluar
                     </button>
-
-                    {{-- Optional: kalau mau tombol submit juga muncul di footer, aktifkan ini --}}
-                    {{-- @if ($step == 3)
-                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
-                            Simpan
-                        </button>
-                    @endif --}}
                 </div>
             </form>
 
         </div>
     </div>
 </div>
+
+{{-- ✅ Auto close modal kalau Livewire dispatch event --}}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('close-createAntrian', function () {
+      const modalEl = document.getElementById('createAntrian');
+      if (!modalEl || !window.bootstrap) return;
+
+      const modal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.hide();
+    });
+  });
+</script>

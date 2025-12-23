@@ -33,10 +33,35 @@
                 <div class="pk-antrianku__card">
                     <div class="pk-antrianku__cardBody">
 
+                        {{-- ✅ ALERT JIKA NIK DIBLOKIR (3x TIDAK HADIR) --}}
+                        @if (session('blocked_nik'))
+                            <div class="alert alert-danger mb-4" role="alert">
+                                <div class="fw-bold mb-1">
+                                    <i class="bi bi-shield-lock-fill me-1"></i>
+                                    NIK Anda diblokir sementara
+                                </div>
+                                <div>
+                                    {{ session('error') ?? 'Maaf, NIK Anda diblokir sementara karena tercatat 3× tidak hadir. Silakan hubungi pihak Puskesmas melalui menu Contact.' }}
+                                </div>
+                                <div class="mt-2">
+                                    <a href="{{ url('/#contact') }}" class="btn btn-outline-light btn-sm rounded-pill">
+                                        <i class="bi bi-envelope-paper me-1"></i> Hubungi Contact
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- ALERT JIKA NIK TIDAK DITEMUKAN --}}
                         @if (session('nik_not_found'))
                             <div class="alert alert-warning mb-4" role="alert">
                                 {{ session('nik_not_found') }}
+                            </div>
+                        @endif
+
+                        {{-- (opsional) alert error umum --}}
+                        @if (session('error') && !session('blocked_nik'))
+                            <div class="alert alert-danger mb-4" role="alert">
+                                {{ session('error') }}
                             </div>
                         @endif
 
@@ -69,7 +94,18 @@
                                     class="form-control form-control-lg pk-antrianku__input @error('no_ktp') is-invalid @enderror"
                                     placeholder="3273xxxxxxxxxxxx"
                                     value="{{ old('no_ktp') }}"
+                                    inputmode="numeric"
+                                    pattern="[0-9]{16}"
+                                    maxlength="16"
+                                    minlength="16"
+                                    autocomplete="off"
+                                    aria-describedby="nikHelp"
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,16);"
                                 >
+
+                                <div id="nikHelp" class="form-text" style="font-size: 12px;">
+                                    *NIK harus <b>16 digit angka</b>.
+                                </div>
 
                                 @error('no_ktp')
                                     <div class="invalid-feedback">{{ $message }}</div>

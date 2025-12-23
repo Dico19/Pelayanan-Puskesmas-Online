@@ -22,7 +22,7 @@
                             Selamat Datang <span>| {{ auth()->user()->name }}</span>
                         </h5>
                         <div class="d-flex align-items-center">
-                            <h2 class="mb-0">PELAYANAN ANTRIAN ONLINE PUSKESMAS KALIGANDU</h2>
+                            <h2 class="mb-0">PELAYANAN ONLINE PUSKESMAS KALIGANDU</h2>
                         </div>
                         <div class="text-muted mt-2">
                             Super Admin hanya mengelola data & laporan. Pengelolaan antrian poli dilakukan oleh akun dokter masing-masing.
@@ -120,6 +120,11 @@
 
                                 <a href="{{ route('admin.analytics') }}" class="btn btn-outline-primary">
                                     <i class="bi bi-graph-up me-1"></i> Analitik
+                                </a>
+
+                                {{-- ✅ Tambahan Audit Log --}}
+                                <a href="{{ route('admin.audit.index') }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-shield-check me-1"></i> Audit Log
                                 </a>
 
                                 <a href="{{ route('tv.antrian') }}" class="btn btn-outline-secondary" target="_blank">

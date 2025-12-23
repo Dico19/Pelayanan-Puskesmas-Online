@@ -221,3 +221,42 @@
   color: #e5e7eb;
   border-color: #334155 !important;
 }
+
+/* =========================
+   FIX: MODAL DI ATAS HEADER/TOPBAR (anti kepotong)
+   ========================= */
+.modal{
+  z-index: 4000 !important;       /* harus > z-index header/topbar kamu */
+}
+.modal-backdrop{
+  z-index: 3990 !important;
+}
+
+/* Modal biar gak nabrak header (opsional tapi bikin rapi) */
+.modal-dialog{
+  margin-top: 90px;              /* sesuaikan tinggi header/topbar */
+}
+@media (max-width: 576px){
+  .modal-dialog{ margin-top: 70px; }
+}
+
+/* Kalau modal kontennya panjang, biar bisa scroll */
+.modal-dialog-scrollable .modal-body{
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+/* (Opsional) pastiin isi modal gak melebar aneh */
+.modal-content{
+  border-radius: 16px;
+}
+/* Sticky header tabel lebih solid */
+.table-responsive.antrian-scroll{
+  position: relative;
+}
+.antrian-table thead th{
+  box-shadow: 0 1px 0 #e2e8f0; /* garis halus */
+}
+.dark-mode .antrian-table thead th{
+  box-shadow: 0 1px 0 #1f2937;
+}

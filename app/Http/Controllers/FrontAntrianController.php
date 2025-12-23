@@ -7,22 +7,197 @@ use App\Models\Patient;
 use App\Models\RekamMedik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class FrontAntrianController extends Controller
 {
     /**
+     * =========================
+     * ✅ BLOKIR NIK (3x TIDAK HADIR) - bisa direset admin
+     * =========================
+     */
+    private int $ABSENT_BLOCK_THRESHOLD = 3;
+
+    /**
+     * Status yang dianggap "masih proses / aktif"
+     * (kalau masih ada ini di tanggal layanan, pasien tidak boleh ambil lagi)
+     */
+    private array $ACTIVE_STATUSES = ['menunggu', 'dipanggil', 'dilayani', 'dilewati'];
+
+    private function normalizeNik(?string $nik): string
+    {
+        $nik = trim((string) $nik);
+        return preg_replace('/\D+/', '', $nik) ?? '';
+    }
+
+    private function normalizePoliKey(?string $value): ?string
+    {
+        $value = strtolower(trim((string) $value));
+        if ($value === '') return null;
+
+        $value = preg_replace('/[^a-z0-9]+/', '_', $value);
+        $value = trim((string) $value, '_');
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Variasi penulisan poli di input/DB
+     */
+    private function allowedPoliValues(?string $poliInput): array
+    {
+        $code = $this->normalizePoliKey($poliInput);
+
+        $map = [
+            'umum'   => ['umum'],
+            'gigi'   => ['gigi'],
+            'tht'    => ['tht'],
+            'balita' => ['balita'],
+
+            'kia'    => ['kia', 'kia & kb', 'kia&kb', 'kia_kb', 'kia kb'],
+            'kb'     => ['kia', 'kia & kb', 'kia&kb', 'kia_kb', 'kia kb'],
+            'kia_kb' => ['kia', 'kia & kb', 'kia&kb', 'kia_kb', 'kia kb'],
+
+            'nifas'     => ['nifas', 'nifas/pnc', 'nifas pnc', 'pnc', 'nifas_pnc'],
+            'pnc'       => ['nifas', 'nifas/pnc', 'nifas pnc', 'pnc', 'nifas_pnc'],
+            'nifas_pnc' => ['nifas', 'nifas/pnc', 'nifas pnc', 'pnc', 'nifas_pnc'],
+
+            'lansia'             => ['lansia', 'lansia & disabilitas', 'disabilitas', 'lansia_disabilitas'],
+            'disabilitas'        => ['lansia', 'lansia & disabilitas', 'disabilitas', 'lansia_disabilitas'],
+            'lansia_disabilitas' => ['lansia', 'lansia & disabilitas', 'disabilitas', 'lansia_disabilitas'],
+        ];
+
+        return $map[$code] ?? (empty($code) ? [] : [$code]);
+    }
+
+    /**
+     * ✅ Normalisasi status antrian (support data lama)
+     */
+    private function normStatusRow($row): string
+    {
+        $s = strtolower(trim((string)($row->status ?? '')));
+
+        // fallback data lama (kalau belum punya kolom status / masih kosong)
+        if ($s === '') {
+            $s = ((int)($row->is_call ?? 0) === 1) ? 'dipanggil' : 'menunggu';
+        }
+
+        // alias
+        if ($s === 'lewat') $s = 'dilewati';
+        if ($s === 'tidak hadir' || $s === 'tidak-hadir') $s = 'tidak_hadir';
+
+        return $s;
+    }
+
+    /**
+     * ✅ Ambil waktu terakhir admin "unblock/reset" NIK
+     */
+    private function lastUnblockAt(string $nik): ?string
+    {
+        $nik = $this->normalizeNik($nik);
+        if ($nik === '') return null;
+
+        // butuh tabel nik_block_resets
+        return DB::table('nik_block_resets')
+            ->where('no_ktp', $nik)
+            ->max('created_at');
+    }
+
+    /**
+     * ✅ Hitung jumlah tidak_hadir setelah terakhir di-unblock admin
+     * PENTING: pakai updated_at karena status "tidak_hadir" bisa berubah belakangan
+     */
+    private function absentCountAfterReset(string $nik): int
+    {
+        $nik = $this->normalizeNik($nik);
+        if ($nik === '') return 0;
+
+        $lastReset = $this->lastUnblockAt($nik);
+
+        $q = Antrian::query()
+            ->where('no_ktp', $nik)
+            ->whereIn(DB::raw('LOWER(status)'), ['tidak_hadir', 'tidak hadir']);
+
+        if ($lastReset) {
+            $q->where('updated_at', '>', $lastReset);
+        }
+
+        return (int) $q->count();
+    }
+
+    /**
+     * ✅ NIK diblokir kalau tidak_hadir (setelah reset terakhir) >= threshold
+     */
+    private function nikIsBlocked(string $nik): bool
+    {
+        return $this->absentCountAfterReset($nik) >= $this->ABSENT_BLOCK_THRESHOLD;
+    }
+
+    private function blockedNikResponse(Request $request): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    {
+        $msg = "Maaf, NIK Anda diblokir sementara karena tercatat {$this->ABSENT_BLOCK_THRESHOLD}× tidak hadir. "
+            . "Silakan hubungi pihak Puskesmas melalui menu Contact.";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok'      => false,
+                'blocked' => true,
+                'message' => $msg,
+            ], 403);
+        }
+
+        return redirect()
+            ->route('antrian.cari')
+            ->withInput()
+            ->with('blocked_nik', true)
+            ->with('error', $msg);
+    }
+
+    /**
+     * ✅ BLOK hanya jika masih ada antrian AKTIF pada TANGGAL LAYANAN (umumnya "hari ini")
+     * Status selesai / tidak_hadir => BOLEH ambil lagi.
+     *
+     * Default: cek aktif untuk NIK di tanggal tsb (semua poli).
+     * Kalau kamu mau khusus poli saja, set $checkByPoli = true.
+     */
+    private function hasActiveQueueOnDate(string $nik, string $tanggal, ?string $poliInput = null, bool $checkByPoli = false): bool
+    {
+        $nik = $this->normalizeNik($nik);
+        if ($nik === '' || trim($tanggal) === '') return false;
+
+        $q = Antrian::query()
+            ->where('no_ktp', $nik)
+            ->whereDate('tanggal_antrian', $tanggal);
+
+        if ($checkByPoli && $poliInput) {
+            $allowedPoli = array_map('strtolower', $this->allowedPoliValues($poliInput));
+            if (empty($allowedPoli)) $allowedPoli = [strtolower(trim($poliInput))];
+
+            $q->whereIn(DB::raw('LOWER(poli)'), $allowedPoli);
+        }
+
+        $rows = $q->get();
+
+        foreach ($rows as $r) {
+            $status = $this->normStatusRow($r);
+            if (in_array($status, $this->ACTIVE_STATUSES, true)) {
+                return true; // masih aktif -> blok ambil lagi
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Guard: kalau antrian sudah dipanggil dokter,
      * pasien tidak boleh edit/hapus/status.
-     * Arahkan ke halaman diagnosa (rekam medik).
-     * ✅ tetap bawa parameter back (kalau ada) agar tombol kembali konsisten.
      */
     private function blockIfCalled(Antrian $antrian, string $msg = null, ?Request $request = null)
     {
         if ((int) $antrian->is_call === 1) {
             $params = ['antrian' => $antrian->id];
 
-            // bawa back kalau ada (dari hasil cari / form / delete)
             $back = $request?->query('back') ?? $request?->input('back') ?? null;
             if ($back) $params['back'] = $back;
 
@@ -44,18 +219,17 @@ class FrontAntrianController extends Controller
         return redirect()->route('antrian.index');
     }
 
-    /**
-     * ✅ GET /antrian/cari
-     * - kalau belum ada query no_ktp -> tampilkan form
-     * - kalau ada query no_ktp -> tampilkan hasil pencarian (tanpa harus POST)
-     */
     public function showCariAntrianForm(Request $request)
     {
-        if (! $request->filled('no_ktp')) {
+        if (!$request->filled('no_ktp')) {
             return view('antrian.cari-nik');
         }
 
-        $nik = (string) $request->no_ktp;
+        $nik = $this->normalizeNik((string) $request->no_ktp);
+
+        if ($this->nikIsBlocked($nik)) {
+            return $this->blockedNikResponse($request);
+        }
 
         $antrians = Antrian::where('no_ktp', $nik)
             ->orderByDesc('tanggal_antrian')
@@ -78,12 +252,6 @@ class FrontAntrianController extends Controller
         return $this->searchByNik($request);
     }
 
-    /**
-     * ✅ POST /antrian/cari
-     * FIX PENTING:
-     * Jangan return view langsung, tapi redirect ke GET /antrian/cari?no_ktp=...
-     * Biar tombol kembali/back bisa balik ke hasil pencarian yang valid.
-     */
     public function searchByNik(Request $request)
     {
         $request->validate([
@@ -92,16 +260,15 @@ class FrontAntrianController extends Controller
             'no_ktp.required' => 'Silakan masukkan NIK Anda.',
         ]);
 
-        $nik = (string) $request->no_ktp;
+        $nik = $this->normalizeNik((string) $request->no_ktp);
+
+        if ($this->nikIsBlocked($nik)) {
+            return $this->blockedNikResponse($request);
+        }
 
         return redirect()->route('antrian.cari', ['no_ktp' => $nik]);
     }
 
-    /**
-     * ✅ Halaman Rekam Medik untuk PASIEN
-     * hanya boleh kalau sudah dipanggil (is_call=1)
-     * ✅ kalau belum dipanggil -> redirect ke back kalau ada
-     */
     public function rekamMedik(Request $request, Antrian $antrian)
     {
         if ((int) $antrian->is_call !== 1) {
@@ -158,41 +325,63 @@ class FrontAntrianController extends Controller
             'tanggal_antrian' => 'nullable|date',
         ]);
 
+        $nik = $this->normalizeNik((string) ($data['no_ktp'] ?? ''));
+
+        // ✅ BLOKIR kalau sudah 3x tidak hadir (setelah reset admin terakhir)
+        if ($this->nikIsBlocked($nik)) {
+            return $this->blockedNikResponse($request);
+        }
+
         $tanggalLayanan = !empty($data['tanggal_antrian'])
             ? Carbon::parse($data['tanggal_antrian'])->toDateString()
             : now()->toDateString();
 
-        $patient = Patient::where('no_ktp', $data['no_ktp'])->first();
+        // ✅ BLOK hanya jika masih ada antrian AKTIF di tanggal layanan tsb (umumnya hari ini)
+        // default cek semua poli. Kalau mau khusus poli => set parameter terakhir true.
+        if ($this->hasActiveQueueOnDate($nik, $tanggalLayanan)) {
+            return back()
+                ->withInput()
+                ->with('error',
+                    "Tidak bisa mengambil antrian. Anda masih memiliki antrian yang belum selesai pada tanggal {$tanggalLayanan}. " .
+                    "Jika status sudah SELESAI / TIDAK HADIR, Anda boleh ambil antrian lagi."
+                );
+        }
 
-        if (! $patient) {
+        // ✅ patient pakai nik yang sudah dinormalisasi
+        $patient = Patient::where('no_ktp', $nik)->first();
+        if (!$patient) {
             $patient = Patient::create([
                 'nama'          => $data['nama'],
                 'alamat'        => $data['alamat'],
                 'jenis_kelamin' => $data['jenis_kelamin'],
                 'no_hp'         => $data['no_hp'],
-                'no_ktp'        => $data['no_ktp'],
+                'no_ktp'        => $nik,
                 'tgl_lahir'     => $data['tgl_lahir'],
                 'pekerjaan'     => $data['pekerjaan'] ?? null,
             ]);
         }
 
-        $noAntrian = $this->generateNoAntrianForDate($data['poli'], $tanggalLayanan);
+        $antrian = DB::transaction(function () use ($data, $patient, $tanggalLayanan, $nik) {
+            // ✅ ambil last dengan lock biar nomor antrian aman (anti dobel)
+            $noAntrian = $this->generateNoAntrianForDate((string) $data['poli'], $tanggalLayanan);
 
-        $antrian = Antrian::create([
-            'patient_id'      => $patient->id,
-            'user_id'         => Auth::check() ? Auth::id() : null,
-            'no_antrian'      => $noAntrian,
-            'nama'            => $data['nama'],
-            'alamat'          => $data['alamat'],
-            'jenis_kelamin'   => $data['jenis_kelamin'],
-            'no_hp'           => $data['no_hp'],
-            'no_ktp'          => $data['no_ktp'],
-            'tgl_lahir'       => $data['tgl_lahir'],
-            'pekerjaan'       => $data['pekerjaan'] ?? null,
-            'poli'            => $data['poli'],
-            'tanggal_antrian' => $tanggalLayanan,
-            'is_call'         => 0,
-        ]);
+            return Antrian::create([
+                'patient_id'      => $patient->id,
+                'user_id'         => Auth::check() ? Auth::id() : null,
+                'no_antrian'      => $noAntrian,
+                'nama'            => $data['nama'],
+                'alamat'          => $data['alamat'],
+                'jenis_kelamin'   => $data['jenis_kelamin'],
+                'no_hp'           => $data['no_hp'],
+                'no_ktp'          => $nik,
+                'tgl_lahir'       => $data['tgl_lahir'],
+                'pekerjaan'       => $data['pekerjaan'] ?? null,
+                'poli'            => $data['poli'],
+                'tanggal_antrian' => $tanggalLayanan,
+                'is_call'         => 0,
+                'status'          => 'menunggu', // ✅ konsisten
+            ]);
+        });
 
         return redirect()
             ->route('antrian.index')
@@ -204,18 +393,20 @@ class FrontAntrianController extends Controller
         return view('antrian.show', compact('antrian'));
     }
 
-    /**
-     * ✅ Status: BLOK kalau sudah dipanggil (langsung ke diagnosa)
-     * ✅ bawa back param supaya tombol kembali konsisten.
-     */
     public function status(Request $request, Antrian $antrian)
     {
         if ($resp = $this->blockIfCalled($antrian, 'Antrian sudah dipanggil. Silakan lihat diagnosa/rekam medik.', $request)) {
             return $resp;
         }
 
+        // ✅ orang di depan: yang masih "menunggu"
         $orangDiDepan = Antrian::where('poli', $antrian->poli)
             ->whereDate('tanggal_antrian', $antrian->tanggal_antrian)
+            ->where(function ($q) {
+                $q->whereNull('status')
+                  ->orWhere('status', '')
+                  ->orWhere(DB::raw('LOWER(status)'), 'menunggu');
+            })
             ->where('is_call', 0)
             ->where('id', '<', $antrian->id)
             ->count();
@@ -302,7 +493,6 @@ class FrontAntrianController extends Controller
             'back'            => 'nullable|string',
         ]);
 
-        // ✅ FIX: jangan ikut update field "back"
         $antrian->update(collect($data)->except('back')->toArray());
 
         $back = $request->input('back');
@@ -331,25 +521,39 @@ class FrontAntrianController extends Controller
     protected function generateNoAntrianForDate(string $poli, string $tanggal): string
     {
         $prefixMap = [
-            'umum'                 => 'U',
-            'gigi'                 => 'G',
-            'tht'                  => 'T',
-            'balita'               => 'B',
-            'kia & kb'             => 'K',
-            'kia & kb '            => 'K',
-            'nifas/pnc'            => 'N',
-            'lansia & disabilitas' => 'L',
+            'umum'               => 'U',
+            'gigi'               => 'G',
+            'tht'                => 'T',
+            'balita'             => 'B',
+            'kia'                => 'K',
+            'kb'                 => 'K',
+            'kia_kb'             => 'K',
+            'nifas'              => 'N',
+            'pnc'                => 'N',
+            'nifas_pnc'          => 'N',
+            'lansia'             => 'L',
+            'disabilitas'        => 'L',
+            'lansia_disabilitas' => 'L',
         ];
 
-        $key    = strtolower($poli);
+        $key = $this->normalizePoliKey($poli) ?? 'antrian';
         $prefix = $prefixMap[$key] ?? 'A';
 
-        $last = Antrian::where('poli', $poli)
+        // cari poli yang setara
+        $allowedPoli = array_map('strtolower', $this->allowedPoliValues($poli));
+        if (empty($allowedPoli)) {
+            $allowedPoli = [strtolower(trim($poli))];
+        }
+
+        // ✅ lock agar aman dari dobel nomor di jam ramai
+        $last = Antrian::query()
             ->whereDate('tanggal_antrian', $tanggal)
+            ->whereIn(DB::raw('LOWER(poli)'), $allowedPoli)
             ->orderByDesc('id')
+            ->lockForUpdate()
             ->first();
 
-        if ($last && preg_match('/\d+$/', $last->no_antrian, $match)) {
+        if ($last && preg_match('/\d+$/', (string) $last->no_antrian, $match)) {
             $nextNumber = (int) $match[0] + 1;
         } else {
             $nextNumber = 1;

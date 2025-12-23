@@ -58,7 +58,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <a href="{{ route('admin.dashboard') }}" class="logo d-flex align-items-center">
                 <img src="/assetsDashboard/img/logo.png" alt="">
-                <span class="d-none d-lg-block">Antrian Online</span>
+                <span class="d-none d-lg-block">Layanan Online</span>
             </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>
         </div>
@@ -119,75 +119,76 @@
     </header>
     <!-- End Header -->
 
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
-        @php
-            $roleRaw = auth()->user()->role?->role ?? auth()->user()->role ?? '';
-            $role = strtolower(str_replace(' ', '_', trim((string) $roleRaw)));
-        @endphp
+   <!-- ======= Sidebar ======= -->
+<aside id="sidebar" class="sidebar sidebar-cards">
+    @php
+        $roleRaw = auth()->user()->role?->role ?? auth()->user()->role ?? '';
+        $role = strtolower(str_replace(' ', '_', trim((string) $roleRaw)));
+    @endphp
 
-        <ul class="sidebar-nav" id="sidebar-nav">
+    <ul class="sidebar-nav cards" id="sidebar-nav">
 
-            {{-- DASHBOARD --}}
+        {{-- DASHBOARD --}}
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+               href="{{ route('admin.dashboard') }}">
+                <i class="bx bxs-home"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        {{-- DATA PASIEN --}}
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.pasien.*') ? 'active' : '' }}"
+               href="{{ route('admin.pasien.index') }}">
+                <i class="bx bx-user"></i>
+                <span>Data Pasien</span>
+            </a>
+        </li>
+
+        {{-- LAPORAN --}}
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}"
+               href="{{ route('admin.laporan.index') }}">
+                <i class="bx bx-task"></i>
+                <span>Laporan</span>
+            </a>
+        </li>
+
+        {{-- ✅ AUDIT LOG (SUPER ADMIN ONLY) --}}
+        @if($role === 'super_admin')
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.dashboard') }}">
-                    <i class="bx bxs-home"></i>
-                    <span>Dashboard</span>
+                <a class="nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}"
+                   href="{{ route('admin.audit.index') }}">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Audit Log</span>
                 </a>
             </li>
+        @endif
 
-            {{-- DATA PASIEN --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.pasien.*') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.pasien.index') }}">
-                    <i class="bx bx-user"></i>
-                    <span>Data Pasien</span>
-                </a>
-            </li>
+        {{-- ANALITIK --}}
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.analytics') ? 'active' : '' }}"
+               href="{{ route('admin.analytics') }}">
+                <i class="bi bi-graph-up"></i>
+                <span>Analitik</span>
+            </a>
+        </li>
 
-            {{-- LAPORAN --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.laporan.*') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.laporan.index') }}">
-                    <i class="bx bx-task"></i>
-                    <span>Laporan</span>
-                </a>
-            </li>
+        {{-- LOGOUT (nempel bawah) --}}
+        <li class="nav-item sidebar-logout-item">
+            <form action="/logout" method="POST" class="m-0">
+                @csrf
+                <button type="submit" class="btn sidebar-logout-red w-100 text-start px-3">
+                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                </button>
+            </form>
+        </li>
 
-            {{-- ✅ AUDIT LOG (SUPER ADMIN ONLY) --}}
-            @if($role === 'super_admin')
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.audit.*') ? '' : 'collapsed' }}"
-                       href="{{ route('admin.audit.index') }}">
-                        <i class="bi bi-shield-check"></i>
-                        <span>Audit Log</span>
-                    </a>
-                </li>
-            @endif
+    </ul>
+</aside>
+<!-- End Sidebar -->
 
-            {{-- ANALITIK --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.analytics') ? '' : 'collapsed' }}"
-                   href="{{ route('admin.analytics') }}">
-                    <i class="bi bi-graph-up"></i>
-                    <span>Analitik</span>
-                </a>
-            </li>
-
-            {{-- LOGOUT --}}
-            <li class="nav-item mt-3">
-                <form action="/logout" method="POST">
-                    @csrf
-                    <button type="submit" class="btn sidebar-logout-red w-100 text-start px-3">
-                        <i class="bi bi-box-arrow-right me-2"></i> Logout
-                    </button>
-                </form>
-            </li>
-
-        </ul>
-    </aside>
-    <!-- End Sidebar -->
 
     <main id="main" class="main @yield('main-class')">
         <section class="section @yield('section-class', 'dashboard')">
