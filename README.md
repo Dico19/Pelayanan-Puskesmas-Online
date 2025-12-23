@@ -151,7 +151,7 @@ Karena halaman publik dapat dilihat umum, disarankan:
 ![Monitor](public/assets/screenshots/Monitor.png)
 ![Pasien-Lihat-Diagnosa](public/assets/screenshots/Pasien-Lihat-Diagnosa.png)
 ![Dashboard-Super-Admin](public/assets/screenshots/Dashboard-Super-Admin.png)
-![Data-Pasien-Super-Admin-1](public/assets/screenshots/Data-Pasien-Super-Admin-1.png)
+![Data-Pasien-Super-Admin-1](public/assets/screenshots/Data-Pasien-Super-Admin1.png)
 ![Data-Pasien-Super-Admin-2](public/assets/screenshots/Data-Pasien-Super-Admin-2.png)
 ![Laporan-Antrian-Super-Admin](public/assets/screenshots/Laporan-Antrian-Super-Admin.png)
 ![Audit-Log-Super-Admin-1](public/assets/screenshots/Audit-Log-Super-Admin-1.png)
