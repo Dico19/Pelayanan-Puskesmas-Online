@@ -161,6 +161,6 @@ Karena halaman publik dapat dilihat umum, disarankan:
 ![Daftar-Antrian-Dokter](public/assets/screenshots/Daftar Antrian Dokter.png)
 ![Statistik-Dokter](public/assets/screenshots/Statistik Dokter.png)
 ![Riwayat-Dokter-1](public/assets/screenshots/Riwayat Dokter 1.png)
-![Riwayat-Dokter-2](public/assets/screenshots/Riwayat Dokter 2.png)
-![Reset-Antrian](public/assets/screenshots/Reset Antrian.png)
+![Riwayat-Dokter-2](public/assets/screenshots/Riwayat-Dokter-2.png)
+![Reset-Antrian](public/assets/screenshots/Reset-Antrian.png)
 ![Diagnosa](public/assets/screenshots/Diagnosa.png)
